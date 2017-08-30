@@ -1,0 +1,59 @@
+﻿@using FinOps.Models;
+
+@model HomeModel
+@{
+    ViewBag.Title = "FinOps";
+}
+
+<div class="page-header">
+    <h1>LNF Financial Operations</h1>
+</div>
+
+<h5><strong>Current user: @Model.CurrentUser.DisplayName</strong></h5>
+
+<div class="row" style="margin-top: 20px;">
+    <div class="col-sm-2">
+        <h4 style="text-align: center;"><strong>Financial Reports</strong></h4>
+        <div class="list-group">
+            @Html.ActionLink("Miscellaneous Charges", "MiscCharges", "Report", null, new { @class = "list-group-item" })
+            @Html.ActionLink("SUB Reports", "ServiceUnitBilling", "Report", null, new { @class = "list-group-item" })
+            @Html.ActionLink("External Invoice", "ExternalInvoice", "Report", null, new { @class = "list-group-item" })
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <h4 style="text-align: center;"><strong>Configuration</strong></h4>
+        <div class="list-group">
+            @Html.ActionLink("Configure Holidays", "Holidays", "Configuration", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Global Parameters", "GlobalParameters", "Configuration", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Define Aux Cost Parameters", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Room Charges", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Store Charges", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Tool Charges", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Costing Formulas", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Remote Processing", "RemoteProcessing", "Configuration", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Recharge Accounts", "Index", "Home", null, new { @class = "list-group-item" })
+            @Html.ActionLink("Configure Account Subsidy", "AccountSubsidy", "Configuration", null, new { @class = "list-group-item" })
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <h4 style="text-align: center;"><strong>Summaries</strong></h4>
+        @Html.ActionLink("Historical Reports", "Index", "Home", null, new { @class = "list-group-item" })
+        @Html.ActionLink("Subsidy Tiers Report", "Index", "Home", null, new { @class = "list-group-item" })
+
+        <h4 style="text-align: center; margin-top: 40px;"><strong>Other</strong></h4>
+        @Html.ActionLink("Per Usage Reports", "Index", "Home", null, new { @class = "list-group-item" })
+        @Html.ActionLink("Experimental Cost Config", "Index", "Home", null, new { @class = "list-group-item" })
+        @Html.ActionLink("Experimental Cost Config 2", "Index", "Home", null, new { @class = "list-group-item" })
+        @Html.ActionLink("Billing Checks", "Index", "Home", null, new { @class = "list-group-item" })
+        @Html.ActionLink("Tool Billing Report", "ToolBilling", "Report", null, new { @class = "list-group-item" })
+    </div>
+</div>
+
+<div class="row" style="margin-top: 20px;">
+    <div class="col-sm-2">
+        <h4 style="text-align: center;"><strong>Application Control</strong></h4>
+        <div class="list-group">
+            @Html.ActionLink("Exit Application", "ExitApplication", "Home", null, new { @class = "list-group-item" })
+        </div>
+    </div>
+</div>

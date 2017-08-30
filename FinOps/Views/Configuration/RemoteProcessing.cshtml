@@ -1,0 +1,174 @@
+﻿@using FinOps.Models;
+
+@model RemoteProcessingModel
+@{
+    ViewBag.Title = "Remote Processing Configuration";
+}
+
+@section styles{
+    <link rel="stylesheet" href="@Url.Content("~/Scripts/remoteProcessing/jquery.remoteProcessing.css?v=20161115")">
+}
+
+<div class="remote-processing" data-apiurl="/webapi/">
+    @using (Html.BeginForm("RemoteProcessingSave", "Configuration", FormMethod.Post, new { @class = "form-horizontal" }))
+    {
+        <h2>Remote Processing Configuration</h2>
+
+        <hr />
+
+        <div class="form-group">
+            @Html.LabelFor(x => x.Period, new { @class = "control-label col-sm-1" })
+            <div class="col-sm-1">
+                @Html.TextBoxFor(x => x.Period, "{0:MMM yyyy}", new { @class = "form-control period-picker" })
+            </div>
+            <p class="help-block">&larr; Change to refresh data</p>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body client-remotes">
+                <div class="refresh refresh-client-remotes">
+                    <a href="#">Refresh</a>
+                    <div class="loading text-muted">
+                        Refreshing client remotes...
+                    </div>
+                </div>
+                <table class="table table-striped remote-processing-table">
+                    <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>Name</th>
+                            <th>Account</th>
+                            <th>Remote User</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="refresh refresh-client-remotes">
+                    <a href="#">Refresh</a>
+                    <div class="loading text-muted">
+                        Updating billing...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h2>Add New Entry</h2>
+
+            <div class="form-group">
+                @Html.LabelFor(x => x.ClientID, "Staff", new { @class = "control-label col-sm-1" })
+                <div class="col-sm-3">
+                    @Html.DropDownListFor(x => x.ClientID, new SelectListItem[] { }, new { @class = "form-control staff-select" })
+                    <p class="form-control-static staff-loading"><em class="text-muted">Loading...</em></p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(x => x.RemoteClientID, "Remote User", new { @class = "control-label col-sm-1" })
+                <div class="col-sm-3">
+                    @Html.DropDownListFor(x => x.RemoteClientID, new SelectListItem[] { }, new { @class = "form-control remote-user-select" })
+                    <p class="form-control-static remote-user-loading"><em class="text-muted">Loading...</em></p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(x => x.RemoteAccountID, "Account", new { @class = "control-label col-sm-1" })
+                <div class="col-sm-3">
+                    @Html.DropDownListFor(x => x.RemoteAccountID, new SelectListItem[] { }, new { @class = "form-control remote-acct-select" })
+                    <p class="form-control-static remote-acct-loading"><em class="text-muted">Loading...</em></p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-offset-1 col-sm-3">
+                    <a href="#" class="create-link btn btn-primary">Create New Entry</a>
+                    <a href="@Url.Action("Return", "Home")" class="btn btn-default">&larr; Back to Main Page</a>
+                    <div class="message">
+                        @Html.GetMesage()
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h2>Regular Exceptions</h2>
+
+            <div class="panel panel-default">
+                <div class="panel-body regular-exceptions">
+                    <div class="refresh refresh-regular-exceptions">
+                        <a href="#">Refresh</a>
+                        <div class="loading text-muted">
+                            Refreshing regular exceptions...
+                        </div>
+                    </div>
+                    <table class="table table-striped regular-exception-table">
+                        <thead>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <th>Type</th>
+                                <th>Client</th>
+                                <th>Invitee</th>
+                                <th>ReservationID</th>
+                                <th>Resource/Room</th>
+                                <th>Account</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="refresh refresh-regular-exceptions">
+                        <a href="#">Refresh</a>
+                        <div class="loading text-muted">
+                            Refreshing regular exceptions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h2>Remote Processing Reservations</h2>
+
+            <div class="panel panel-default">
+                <div class="panel-body remproc-reservations">
+                    <div class="refresh refresh-remproc-reservations">
+                        <a href="#">Refresh</a>
+                        <div class="loading text-muted">
+                            Refreshing remote processing reservations...
+                        </div>
+                    </div>
+                    <table class="table table-striped remproc-reservation-table">
+                        <thead>
+                            <tr>
+                                <th>ReservationID</th>
+                                <th>Resource</th>
+                                <th>Client</th>
+                                <th>Remote Client</th>
+                                <th>Account</th>
+                                <th>Begin</th>
+                                <th>End</th>
+                                <th>Active</th>
+                                <th>Started</th>
+                                <th>CM</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="refresh refresh-remproc-reservations">
+                        <a href="#">Refresh</a>
+                        <div class="loading text-muted">
+                            Refreshing remote processing reservations...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts{
+    <script src="@Url.Content("~/Scripts/remoteProcessing/jquery.remoteProcessing.js?v=20161115")"></script>
+    <script>
+        var remproc = $(".remote-processing").remoteProcessing();
+    </script>
+}

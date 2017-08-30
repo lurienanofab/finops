@@ -1,0 +1,34 @@
+﻿.remote-processing .text-center {
+    text-align: center;
+}
+
+.remote-processing .staff-loading,
+.remote-processing .remote-user-loading,
+.remote-processing .remote-acct-loading {
+    height: 27px; /* this is the outer height of a select, so the height won't change, which causes everything below to jump around */
+}
+
+.remote-processing .staff-select,
+.remote-processing .remote-user-select,
+.remote-processing .remote-acct-select {
+    display: none; /* hide initially becuase loading message is visible is shown */
+}
+
+.remote-processing .alert {
+    margin-top: 15px;
+}
+
+.remote-processing .loading {
+    display: none;
+    background: #fff url(images/ajax-loader.gif) no-repeat left center;
+    padding-left: 24px;
+}
+
+.remote-processing .refresh {
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+.dataTables_filter > label {
+    float: right;
+}

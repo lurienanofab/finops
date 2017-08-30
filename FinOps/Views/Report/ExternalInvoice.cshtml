@@ -1,0 +1,73 @@
+﻿@using FinOps.Models;
+
+@model ExternalInvoiceModel
+@{
+    ViewBag.Title = "External Invoice";
+}
+
+<div class="page-header">
+    <h2>
+        External Invoice<br />
+        <small>
+            Use this page to generate invoices for external organizations.<br />
+            <a href="@Url.Action("Index", "Home")">&larr; Return to Main Page</a>
+        </small>
+    </h2>
+</div>
+
+@using (Html.BeginForm("ExternalInvoicePost", "Report", FormMethod.Post, new { id = "form1", @class = "form-horizontal" }))
+{
+    <div class="form-group">
+        @Html.LabelFor(x => x.Period, new { @class = "col-sm-1 control-label" })
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.Period, "{0:MMM yyyy}", new { @class = "periodpicker form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-1 col-sm-11">
+            <div class="checkbox">
+                @Html.CheckBoxFor(x => x.IncludeRemoteProcessing, new { @class = "include-remote" })
+                @Html.LabelFor(x => x.IncludeRemoteProcessing, "Include Remote Processing", new { style = "display: inline-block; margin-top: 3px;" })
+            </div>
+        </div>
+    </div>
+}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Summary</h3>
+    </div>
+    <div class="panel-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-1 control-label">Other Academic</label>
+                <div class="col-sm-11">
+                    <p class="form-control-static">$0.00</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label">Non-Academic</label>
+                <div class="col-sm-11">
+                    <p class="form-control-static">$0.00</p>
+                </div>
+            </div>
+        </div>
+        @Html.ActionLink("Download All Invoices as Zip File", "ExternalInvoiceDownloadZip", "Report", null, new { @class = "btn btn-default" })
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Invoices for @Model.Period.ToString("MMM yyyy")</h3>
+    </div>
+    <div class="panel-body">
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(".include-remote").on("change", function (e) {
+            $("#form1").submit();
+        });
+    </script>
+}

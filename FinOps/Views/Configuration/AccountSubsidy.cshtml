@@ -1,0 +1,101 @@
+﻿@using LNF.Web.Mvc;
+@using FinOps.Models;
+
+@model AccountSubsidyConfigModel
+@{
+    ViewBag.Title = "Account Subsidy";
+}
+
+<div class="page-header">
+    <h2>
+        Account Subsidy<br />
+        <small>
+            Use this page to enter an account subsidy that will override the normal tiered subsidy.<br />
+            <a href="@Url.Action("Index", "Home")">&larr; Return to Main Page</a>
+        </small>
+    </h2>
+</div>
+
+@using (Html.BeginForm("AccountSubsidy", "Configuration", FormMethod.Post, new { @id = "form1", @class = "form-horizontal" }))
+{
+    <div class="form-group">
+        @Html.LabelFor(x => x.EnableDate, "Enable Date", new { @class = "col-sm-1 control-label" })
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.EnableDate, "{0:M/d/yyyy}", new { @class = "datepicker form-control" })
+        </div>
+        <div class="col-sm-10">
+            <p class="form-control-static"><em class="text-muted">change to reload</em></p>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.AccountID, "Account", new { @class = "col-sm-1 control-label" })
+        <div class="col-sm-6">
+            @Html.DropDownListFor(x => x.AccountID, Model.Accounts.OrderBy(x => x.OrgName).ThenBy(x => x.AccountName).Select(x => new SelectListItem() { Text = x.GetAccountName(), Value = x.AccountID.ToString() }), new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.UserPaymentPercentage, "Percentage", new { @class = "col-sm-1 control-label" })
+        <div class="col-sm-1">
+            <div class="input-group">
+                @Html.TextBoxFor(x => x.UserPaymentPercentage, new { @class = "form-control", style = "text-align: right;" })
+                <div class="input-group-addon">%</div>
+            </div>
+        </div>
+        <div class="col-sm-10">
+            <p class="form-control-static"><em class="text-muted">the percentage paid by LNF</em></p>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-1 col-sm-11">
+            <button name="command" type="submit" class="btn btn-primary" value="add-account-subsidy">Add Account Subsidy</button>
+        </div>
+    </div>
+    @Html.GetMesage()
+}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Account Subsidies for @Model.EnableDate.ToString("M/d/yyyy")</h3>
+    </div>
+    <div class="panel-body">
+        @if (Model.AccountSubsidies.Count() == 0)
+        {
+            <p class="text-muted">
+                <em>No account subsidies were found for this period.</em>
+            </p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>LNF</th>
+                        <th>PI</th>
+                        <th>Enable</th>
+                        <th>Disable</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.AccountSubsidies)
+                    {
+                        <tr>
+                            <td>@item.GetAccountName()</td>
+                            <td>@((item.UserPaymentPercentage).ToString("#%"))</td>
+                            <td>@((1 - item.UserPaymentPercentage).ToString("#%"))</td>
+                            <td>@item.EnableDate.ToString("MM/dd/yyyy")</td>
+                            <td>@(item.DisableDate.HasValue ? item.DisableDate.Value.ToString("MM/dd/yyyy") : string.Empty)</td>
+                            <td>
+                                @if (!item.DisableDate.HasValue)
+                                {
+                                    @Html.ActionLink("disable", "DisableAccountSubsidy", new { item.AccountSubsidyID })
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

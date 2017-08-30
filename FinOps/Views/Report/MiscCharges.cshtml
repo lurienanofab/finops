@@ -1,0 +1,194 @@
+﻿@model FinOps.Models.MiscChargesModel
+@{
+    ViewBag.Title = "Miscellaneous Charges";
+}
+
+@section styles{
+    <style>
+        .table > tbody > tr.item-row > td {
+            vertical-align: middle;
+        }
+    </style>
+}
+
+<h2>Miscellaneous Charges</h2>
+
+<hr />
+
+@using (Html.BeginForm("MiscChargesRun", "Report", FormMethod.Post, new { @class = "criteria form-horizontal" }))
+{
+    <div class="form-group">
+        @Html.LabelFor(x => x.Period, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.Period, "{0:MMM yyyy}", new { @class = "form-control periodpicker period" })
+        </div>
+    </div>
+}
+
+<h2 style="font-size: 16pt;">Add new entry for miscellaneous billing</h2>
+
+@using (Html.BeginForm("MiscChargesAdd", "Report", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    <div class="form-group">
+        @Html.LabelFor(x => x.ClientID, "Client", new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-3">
+            @Html.DropDownListFor(x => x.ClientID, Model.Clients.OrderBy(x => x.DisplayName).Select(x => new SelectListItem() { Text = x.DisplayName, Value = x.ClientID.ToString() }), new { @class = "form-control clients" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.AccountID, "Account", new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            <select class="form-control accounts" name="AccountID" id="AccountID"></select>
+            <p class="accounts-loading form-control-static" style="display: none; min-height: 27px;"><em class="text-muted">Loading...</em></p>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.SUBType, "SUB type", new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-1">
+            @Html.DropDownListFor(x => x.SUBType, new[] { "Room", "Store", "Tool", "Service" }.Select(x => new SelectListItem() { Text = x, Value = x }), new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.ApplyPeriod, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.ApplyPeriod, "{0:MMM yyyy}", new { @class = "form-control periodpicker" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.Quantity, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.Quantity, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.UnitCost, "Unit cost", new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-1">
+            <div class="input-group">
+                <span class="input-group-addon">$</span>
+                @Html.TextBoxFor(x => x.UnitCost, "{0:#0.00}", new { @class = "form-control" })
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(x => x.Description, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-2">
+            @Html.TextAreaFor(x => x.Description, 5, 5, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">Create New Entry</button>
+        </div>
+    </div>
+}
+
+<table class="table table-stiped misc-charges">
+    <thead>
+        <tr>
+            <th>&nbsp;</th>
+            <th>Name</th>
+            <th>Account</th>
+            <th>ShortCode</th>
+            <th>SUB Type</th>
+            <th>Period</th>
+            <th>Inserted</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit Cost</th>
+            <th>Total (w/o subsidy)</th>
+            <th>Subsidy</th>
+            <th>User Payment</th>
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.MiscBillingCharges)
+        {
+            <tr class="item-row">
+                <td><a href="#">Delete</a></td>
+                <td>@item.Client.DisplayName</td>
+                <td>@item.Account.Name</td>
+                <td>@item.Account.ShortCode.Trim()</td>
+                <td>@item.SUBType</td>
+                <td>@item.Period.ToString("M/d/yyyy")</td>
+                <td>@Html.Raw(item.ActDate.ToString("M/d/yyyy'<br/>'h:mm:ss tt"))</td>
+                <td>@item.Description</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitCost.ToString("C")</td>
+                <td>@item.GetTotalCost().ToString("C")</td>
+                <td>@item.SubsidyDiscount.ToString("C")</td>
+                <td>@item.GetUserPayment().ToString("C")</td>
+                <td><a href="#">Edit</a></td>
+                <td><a href="#">Recalculate</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts{
+    <script>
+        $(".misc-charges").dataTable();
+
+        $(".periodpicker.period").on("changeDate", function (e) {
+            $("form.criteria").submit();
+        });
+
+        function Account(data) {
+            this.AccountID = data.AccountID;
+            this.ShortCode = data.ShortCode.trim();
+            this.AccountName = data.AccountName;
+            this.OrgID = data.OrgID;
+            this.OrgName = data.OrgName;
+
+            this.getNameAndShortCode = function () {
+                if (this.ShortCode)
+                    return this.AccountName + " [" + this.ShortCode + "]";
+                else
+                    return this.AccountName;
+            }
+
+            this.getNameAndOrg = function () {
+                return "(" + this.OrgName + ") " + this.getNameAndShortCode();
+            }
+        }
+
+        var loadAccounts = function () {
+            var accts = $(".accounts");
+            var loading = $(".accounts-loading");
+
+            accts.hide();
+            loading.show();
+
+            var period = moment($(".periodpicker.period").datepicker("getDate"));
+            var clientId = $(".clients").val();
+
+            var data = {
+                "sd": period.format("YYYY-MM-[01]"),
+                "ed": period.clone().add(1, 'month').format("YYYY-MM-[01]"),
+                "clientId": clientId
+            };
+
+            $.ajax({
+                "url": "/webapi/data/account/active",
+                "data": data
+            }).done(function (data, textStatus, jqXHR) {
+                accts.html($.map(data, function (item, index) {
+                    var acct = new Account(item);
+                    return $("<option/>", { "value": acct.AccountID }).text(acct.getNameAndOrg());
+                }));
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Error: failed to load accounts!");
+            }).always(function () {
+                loading.hide();
+                accts.show();
+            });
+        }
+
+        $(".clients").on("change", function (e) {
+            loadAccounts();
+        });
+
+        loadAccounts();
+    </script>
+}
