@@ -5,7 +5,8 @@ using LNF.Data;
 using LNF.Models.Data;
 using LNF.Repository;
 using LNF.Repository.Data;
-using OnlineServices.Api;
+using OnlineServices.Api.Billing;
+using OnlineServices.Api.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace FinOps.Controllers
                 return;
             }
 
-            using (var dc = await ApiProvider.NewDataClient())
+            using (var dc = new DataClient())
             {
                 await dc.AddClientRemote(new ClientRemoteModel()
                 {
@@ -117,7 +118,7 @@ namespace FinOps.Controllers
         [Route("configuration/account-subsidy/disable/{AccountSubsidyID}")]
         public async Task<ActionResult> DisableAccountSubsidy(AccountSubsidyModel model)
         {
-            using (var bc = await ApiProvider.NewBillingClient())
+            using (var bc = new BillingClient())
             {
                 var acctSubsidy = await bc.DisableAccountSubsidy(model.AccountSubsidyID);
                 Session["EnableDate"] = acctSubsidy.EnableDate;

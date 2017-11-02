@@ -69,7 +69,7 @@ namespace FinOps.Models
                 int index = 0;
                 foreach (var o in occurrences)
                 {
-                    var e = o.Source as Event;
+                    var e = o.Source as CalendarEvent;
                     result.Add(new CalendarEvent() { Uid = e.Uid, Summary = e.Summary, Start = o.Period.StartTime.AsSystemLocal, OccurrenceIndex = index });
                     index++;
                 }

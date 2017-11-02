@@ -63,62 +63,51 @@
             }
 
             function fillStaffSelect() {
-                var select = $(".staff-select", $this);
-
-                select.hide();
-
-                $(".staff-loading", $this).show();
+                var def = $.Deferred();
 
                 $.ajax({
                     'url': getStaffUrl(getPeriod())
                 }).done(function (data) {
 
                     if (data.length === 0) {
-                        select.html($("<option/>").val(0).html("No active staff this period")).prop('disabled', true);
+                        $(".staff-select", $this).html($("<option/>").val(0).html("No active staff this period")).prop('disabled', true);
                         return;
                     }
 
-                    select.html($.map(data, function (val, i) {
+                    $(".staff-select", $this).html($.map(data, function (val, i) {
                         return $('<option/>', { "value": val.ClientID }).html(val.LName + ', ' + val.FName);
                     }));
-                }).always(function () {
-                    select.show();
-                    $(".staff-loading", $this).hide();
-                });
+
+                    def.resolve();
+                }).fail(def.reject);
+
+                return def.promise();
             }
 
             function fillRemoteUserSelect(callback) {
-                var select = $(".remote-user-select", $this);
-
-                select.hide().prop('disabled', false);
-                $(".remote-user-loading", $this).show();
+                var def = $.Deferred();
 
                 $.ajax({
                     'url': getRemoteUserUrl(getPeriod())
                 }).done(function (data) {
 
                     if (data.length === 0) {
-                        select.html($("<option/>").val(0).html("No active remote users this period")).prop('disabled', true);
+                        $(".remote-user-select", $this).html($("<option/>").val(0).html("No active remote users this period")).prop('disabled', true);
                         return;
                     }
 
-                    select.html($.map(data, function (val, i) {
+                    $(".remote-user-select", $this).html($.map(data, function (val, i) {
                         return $('<option/>', { "value": val.ClientID }).html(val.LName + ', ' + val.FName);
                     }));
-                }).always(function () {
-                    select.show();
-                    $(".remote-user-loading", $this).hide();
 
-                    if (typeof callback === 'function')
-                        callback();
-                });
+                    def.resolve();
+                }).fail(def.reject);
+
+                return def.promise();
             }
 
             function fillRemoteAcctSelect() {
-                var select = $(".remote-acct-select", $this);
-
-                select.hide().prop('disabled', false);
-                $(".remote-acct-loading", $this).show();
+                var def = $.Deferred();
 
                 var clientId = $(".remote-user-select", $this).val();
 
@@ -127,17 +116,18 @@
                 }).done(function (data) {
 
                     if (data.length === 0) {
-                        select.html($("<option/>").val(0).html("No active accounts this period")).prop('disabled', true);
+                        $(".remote-acct-select", $this).html($("<option/>").val(0).html("No active accounts this period")).prop('disabled', true);
                         return;
                     }
 
-                    select.html($.map(data, function (val, i) {
+                    $(".remote-acct-select", $this).html($.map(data, function (val, i) {
                         return $('<option/>', { "value": val.AccountID }).html(val.AccountName);
                     }));
-                }).always(function () {
-                    select.show();
-                    $(".remote-acct-loading", $this).hide();
-                });
+
+                    def.resolve();
+                }).fail(def.reject);
+
+                return def.promise();
             }
 
             function diplayAlert(type, msg, dismissible) {
@@ -221,10 +211,10 @@
             function refreshClientRemotes(period) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".client-remotes", $this));
+                $this.trigger('refresh-client-remotes-spinner-on');
 
                 clientRemotes.api().ajax.url(getRemoteProcessingUrl(period)).load(function () {
-                    toggleRefreshOff($(".client-remotes", $this));
+                    $this.trigger('refresh-client-remotes-spinner-off');
                     def.resolve();
                 });
 
@@ -234,10 +224,10 @@
             function refreshRegularExceptions(period) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".regular-exceptions", $this));
+                $this.trigger('refresh-regular-exceptions-spinner-on');
 
                 regularExceptions.api().ajax.url(getRegularExceptionUrl(period)).load(function () {
-                    toggleRefreshOff($(".regular-exceptions", $this));
+                    $this.trigger('refresh-regular-exceptions-spinner-off');
                     def.resolve();
                 });
 
@@ -247,10 +237,10 @@
             function refreshRemprocReservations(period) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".remproc-reservations", $this));
+                $this.trigger('refresh-remproc-reservations-spinner-on');
 
                 remprocReservations.api().ajax.url(getRemoteProcessingReservationUrl(period)).load(function () {
-                    toggleRefreshOff($(".remproc-reservations", $this));
+                    $this.trigger('refresh-remproc-reservations-spinner-off');
                     def.resolve();
                 });
 
@@ -260,8 +250,8 @@
             function updateBilling(args) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".client-remotes", $this));
-                toggleRefreshOn($(".regular-exceptions", $this));
+                $this.trigger('refresh-client-remotes-spinner-on');
+                $this.trigger('refresh-regular-exceptions-spinner-on');
 
                 $.ajax({
                     'url': getUpdateBillingUrl(),
@@ -269,8 +259,8 @@
                     'data': args
                 }).always(function () {
                     refreshRegularExceptions(args.Period).always(function () {
-                        toggleRefreshOff($(".client-remotes", $this));
-                        toggleRefreshOff($(".regular-exceptions", $this));
+                        $this.trigger('refresh-client-remotes-spinner-off');
+                        $this.trigger('refresh-regular-exceptions-spinner-off');
                         def.resolve();
                     });
                 });
@@ -281,8 +271,8 @@
             function createClientRemote(period, args) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".client-remotes", $this));
-                toggleRefreshOn($(".regular-exceptions", $this));
+                $this.trigger('refresh-client-remotes-spinner-on');
+                $this.trigger('refresh-regular-exceptions-spinner-on');
 
                 $.ajax({
                     'url': getAddClientRemoteUrl(period),
@@ -290,9 +280,9 @@
                     'data': args
                 }).always(function () {
                     refreshClientRemotes(period).always(function () {
-                        updateBilling({ 'ClientID': args.Client.ClientID, 'AccountID': args.Account.AccountID, 'Period': period }).always(function () {
-                            toggleRefreshOff($(".client-remotes", $this));
-                            toggleRefreshOff($(".regular-exceptions", $this));
+                        updateBilling({ 'ClientID': args.ClientID, 'AccountID': args.AccountID, 'Period': period }).always(function () {
+                            $this.trigger('refresh-client-remotes-spinner-off');
+                            $this.trigger('refresh-regular-exceptions-spinner-off');
                             def.resolve();
                         });
                     });
@@ -304,23 +294,49 @@
             function deleteClientRemote(period, args) {
                 var def = $.Deferred();
 
-                toggleRefreshOn($(".client-remotes", $this));
-                toggleRefreshOn($(".regular-exceptions", $this));
+                $this.trigger('refresh-client-remotes-spinner-on');
+                $this.trigger('refresh-regular-exceptions-spinner-on');
 
                 $.ajax({
                     'url': getDeleteClientRemoteUrl(args.ClientRemoteID),
                     'type': 'DELETE'
                 }).always(function () {
                     refreshClientRemotes(period).always(function () {
-                        updateBilling({ 'ClientID': args.Client.ClientID, 'AccountID': args.Account.AccountID, 'Period': period }).always(function () {
-                            toggleRefreshOff($(".client-remotes", $this));
-                            toggleRefreshOff($(".regular-exceptions", $this));
+                        updateBilling({ 'ClientID': args.ClientID, 'AccountID': args.AccountID, 'Period': period }).always(function () {
+                            $this.trigger('refresh-client-remotes-spinner-off');
+                            $this.trigger('refresh-regular-exceptions-spinner-off');
                             def.resolve();
                         });
                     });
                 });
 
                 return def.promise();
+            }
+
+            function refreshAddNewEntryForm() {
+                $(".staff-select", $this).hide();
+                $(".staff-loading", $this).show();
+
+                $(".remote-user-select", $this).hide().prop('disabled', false);
+                $(".remote-user-loading", $this).show();
+
+                $(".remote-acct-select", $this).hide().prop('disabled', false);
+                $(".remote-acct-loading", $this).show();
+
+                fillStaffSelect().done(function () {
+                    fillRemoteUserSelect().done(function () {
+                        fillRemoteAcctSelect().always(function () {
+                            $(".staff-select", $this).show();
+                            $(".staff-loading", $this).hide();
+
+                            $(".remote-user-select", $this).show();
+                            $(".remote-user-loading", $this).hide();
+
+                            $(".remote-acct-select", $this).show();
+                            $(".remote-acct-loading", $this).hide();
+                        });
+                    });
+                });
             }
 
             var clientRemotes = null;
@@ -339,11 +355,7 @@
                 $this.trigger('refresh-regular-exceptions', period);
                 $this.trigger('refresh-remproc-reservations', period);
 
-                fillStaffSelect();
-
-                fillRemoteUserSelect(function () {
-                    fillRemoteAcctSelect();
-                });
+                $this.trigger('refresh-add-new-entry-form');
             });
 
             clientRemotes = $(".remote-processing-table", $this).dataTable({
@@ -432,9 +444,9 @@
                 }
 
                 $this.trigger('create-client-remote', [period, {
-                    'Client': { 'ClientID': clientId },
-                    'RemoteClient': { 'ClientID': remoteClientId },
-                    'Account': { 'AccountID': accountId }
+                    'ClientID': clientId,
+                    'RemoteClientID': remoteClientId,
+                    'AccountID': accountId
                 }]);
 
             }).on('click', '.delete-link', function (e) {
@@ -470,9 +482,9 @@
                 var period = getPeriod();
 
                 $this.trigger('create-client-remote', [period, {
-                    'Client': { 'ClientID': clientId },
-                    'RemoteClient': { 'ClientID': remoteClientId },
-                    'Account': { 'AccountID': accountId }
+                    'ClientID': clientId,
+                    'RemoteClientID': remoteClientId,
+                    'AccountID': accountId
                 }]);
             }).on('click', '.refresh-client-remotes > a', function (e) {
                 e.preventDefault();
@@ -494,17 +506,27 @@
                 updateBilling(args);
             }).on('refresh-client-remotes', function (e, period) {
                 refreshClientRemotes(period);
+            }).on('refresh-client-remotes-spinner-on', function (e) {
+                toggleRefreshOn($(".client-remotes", $this));
+            }).on('refresh-client-remotes-spinner-off', function (e) {
+                toggleRefreshOff($(".client-remotes", $this));
             }).on('refresh-regular-exceptions', function (e, period) {
                 refreshRegularExceptions(period);
+            }).on('refresh-regular-exceptions-spinner-on', function (e) {
+                toggleRefreshOn($(".regular-exceptions", $this));
+            }).on('refresh-regular-exceptions-spinner-off', function (e) {
+                toggleRefreshOff($(".regular-exceptions", $this));
             }).on('refresh-remproc-reservations', function (e, period) {
                 refreshRemprocReservations(period);
+            }).on('refresh-remproc-reservations-spinner-on', function (e) {
+                toggleRefreshOn($(".remproc-reservations", $this));
+            }).on('refresh-remproc-reservations-spinner-off', function (e) {
+                toggleRefreshOff($(".remproc-reservations", $this));
+            }).on('refresh-add-new-entry-form', function (e) {
+                refreshAddNewEntryForm();
             });
 
-            fillStaffSelect();
-
-            fillRemoteUserSelect(function () {
-                fillRemoteAcctSelect();
-            });
+            $this.trigger('refresh-add-new-entry-form');
         });
     };
 }(jQuery));
