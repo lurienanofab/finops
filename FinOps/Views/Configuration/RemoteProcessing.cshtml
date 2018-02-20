@@ -84,6 +84,9 @@
                 <div class="col-sm-offset-1 col-sm-3">
                     <a href="#" class="create-link btn btn-primary">Create New Entry</a>
                     <a href="@Url.Action("Return", "Home")" class="btn btn-default">&larr; Back to Main Page</a>
+                    <div class="create-error alert alert-danger" role="alert" style="display: none;">
+                        <span class="error-message"></span>
+                    </div>
                     <div class="message">
                         @Html.GetMesage()
                     </div>
@@ -167,7 +170,7 @@
 </div>
 
 @section scripts{
-    <script src="@Url.Content("~/Scripts/remoteProcessing/remoteProcessing.js?v=20171102")"></script>
+    <script src="@Url.Content("~/Scripts/remoteProcessing/remoteProcessing.js?v=20171102130303")"></script>
     <script>
         var remproc = $(".remote-processing").remoteProcessing();
     </script>

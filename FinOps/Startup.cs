@@ -1,8 +1,11 @@
 ﻿using LNF.Impl;
 using LNF.Web;
+using Microsoft.Owin;
 using Owin;
 using System.Web.Mvc;
 using System.Web.Routing;
+
+[assembly: OwinStartup(typeof(FinOps.Startup))]
 
 namespace FinOps
 {

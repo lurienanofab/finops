@@ -271,6 +271,8 @@
             function createClientRemote(period, args) {
                 var def = $.Deferred();
 
+                $(".create-error", $this).hide();
+
                 $this.trigger('refresh-client-remotes-spinner-on');
                 $this.trigger('refresh-regular-exceptions-spinner-on');
 
@@ -278,6 +280,9 @@
                     'url': getAddClientRemoteUrl(period),
                     'type': 'POST',
                     'data': args
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    var errmsg = (jqXHR.responseJSON && jqXHR.responseJSON.Message) ? jqXHR.responseJSON.Message : errorThrown;
+                    $(".create-error", $this).show().find(".error-message").html(errmsg);
                 }).always(function () {
                     refreshClientRemotes(period).always(function () {
                         updateBilling({ 'ClientID': args.ClientID, 'AccountID': args.AccountID, 'Period': period }).always(function () {
@@ -419,7 +424,13 @@
 
             // event handlers for links, buttons, and selects
             $this.on('change', '.remote-user-select', function (e) {
-                fillRemoteAcctSelect();
+                $(".remote-acct-select", $this).hide().prop('disabled', false);
+                $(".remote-acct-loading", $this).show();
+
+                fillRemoteAcctSelect().always(function () {
+                    $(".remote-acct-select", $this).show();
+                    $(".remote-acct-loading", $this).hide();
+                });
             }).on('click', '.create-link', function (e) {
                 e.preventDefault();
 
