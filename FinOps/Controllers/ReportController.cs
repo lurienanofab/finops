@@ -32,10 +32,10 @@ namespace FinOps.Controllers
             return View(model);
         }
 
-        private IList<ClientModel> FilterByPeriod(DateTime period)
+        private IList<ClientItem> FilterByPeriod(DateTime period)
         {
             IQueryable<ActiveLogClient> alogs = DA.Current.Query<ActiveLogClient>().Where(x => x.EnableDate < period && (x.DisableDate == null || x.DisableDate.Value > period));
-            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).Model<ClientModel>();
+            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).Model<ClientItem>();
         }
 
         [Route("report/misc-charges/run")]
@@ -63,7 +63,7 @@ namespace FinOps.Controllers
                 {
                     ModelState.Remove("StartDate");
                     ModelState.Remove("EndDate");
-                    Reservation rsv = DA.Scheduler.Reservation.Single(model.ReservationID);
+                    Reservation rsv = DA.Current.Single<Reservation>(model.ReservationID);
                     model.StartDate = rsv.ChargeBeginDateTime().FirstOfMonth();
                     model.EndDate = model.StartDate.Value.AddMonths(1);
                     range = new ReservationDateRange(rsv.Resource.ResourceID, model.StartDate.Value, model.EndDate.Value);

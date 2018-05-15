@@ -106,7 +106,7 @@
                         <td>@item.ChargeDuration</td>
                         <td>@item.OverTimeDuration</td>
                         <td>@item.TransferredDuration</td>
-                        <td>@item.TotalDuration</td>
+                        <td>@item.UtilizedDuration</td>
                         <td>@item.StandardDuration</td>
                     </tr>
                 }
@@ -165,7 +165,7 @@
                         <li class="list-group-item">
                             <strong>Cancelled before cutoff</strong>
                             <div style="margin-left: 10px;">
-                                @string.Format("{0}", item.Reservation.IsCancelledBeforeAllowedTime ? "True" : "False")
+                                @string.Format("{0}", item.Reservation.IsCancelledBeforeCutoff ? "True" : "False")
                             </div>
                         </li>
                         <li class="list-group-item">
@@ -232,7 +232,7 @@
                                         <th>Untransferred&nbsp;<span class="text-muted">(Time not transferred: Chargeable - Transferred)</span></th>
                                         <td>--</td>
                                         <td>--</td>
-                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.TotalDuration.TotalMinutes)</td>
+                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.UtilizedDuration.TotalMinutes)</td>
                                     </tr>
                                     <tr>
                                         <th>Standard&nbsp;<span class="text-muted">(Time billed at the standard rate: Chargeable - Transferred - OverTime)</span></th>
@@ -261,7 +261,7 @@
                                 <tbody>
                                     <tr>
                                         <th>Standard</th>
-                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeAllowedTime ? 0 : item.StandardDuration.TotalMinutes)</td>
+                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? 0 : item.StandardDuration.TotalMinutes)</td>
                                         <td style="text-align: right;">@string.Format("{0:C}", item.Reservation.Cost.HourlyRate())</td>
                                         <td style="text-align: right;">@string.Format("{0:C}", Model.GetStandardCharge(item))</td>
                                     </tr>
@@ -273,7 +273,7 @@
                                     </tr>
                                     <tr>
                                         <th>Booking Fee</th>
-                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeAllowedTime ? item.StandardDuration.TotalMinutes : 0)</td>
+                                        <td style="text-align: right;">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? item.StandardDuration.TotalMinutes : 0)</td>
                                         <td style="text-align: right;">@string.Format("{0:C}", item.Reservation.Cost.BookingFeeRate())</td>
                                         <td style="text-align: right;">@string.Format("{0:C}", Model.GetBookingFeeCharge(item))</td>
                                     </tr>
@@ -328,7 +328,7 @@
                                             <tr>
                                                 <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), ReservationID = trans.Reservation.ReservationID })">@trans.Reservation.ReservationID</a></td>
                                                 <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Client = trans.Reservation.ClientID })">@trans.Reservation.DisplayName</a></td>
-                                                <td>@string.Format("{0:0.00}", trans.TotalDuration.TotalMinutes)</td>
+                                                <td>@string.Format("{0:0.00}", trans.UtilizedDuration.TotalMinutes)</td>
                                             </tr>
                                         }
                                     </tbody>

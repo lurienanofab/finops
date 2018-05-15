@@ -32,7 +32,7 @@ namespace FinOps.Controllers
         [Route("exit")]
         public ActionResult ExitApplication()
         {
-            if (Providers.IsProduction())
+            if (ServiceProvider.Current.IsProduction())
                 return Redirect("http://ssel-sched.eecs.umich.edu/sselonline/Blank.aspx");
             else
                 return Redirect("/sselonline/Blank.aspx");
