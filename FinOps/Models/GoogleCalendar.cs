@@ -27,8 +27,8 @@ namespace FinOps.Models
             {
                 Uri uri = new Uri(string.Format(URL_FORMAT, WebUtility.UrlEncode(Feed.GoogleCalendarID)));
                 var content = wc.DownloadString(uri);
-                var collection = Calendar.LoadFromStream(new StringReader(content)) as CalendarCollection;
-                Source = collection.First() as Calendar;
+                var calendar = Calendar.Load(new StringReader(content));
+                Source = calendar;
             }
         }
 

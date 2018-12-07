@@ -10,7 +10,7 @@ namespace FinOps.Models
         public DateTime EnableDate { get; set; }
         public int AccountID { get; set; }
         public decimal UserPaymentPercentage { get; set; }
-        public IEnumerable<AccountModel> Accounts { get; set; }
+        public IEnumerable<AccountItem> Accounts { get; set; }
         public IEnumerable<AccountSubsidyModel> AccountSubsidies { get; set; }
     }
 }

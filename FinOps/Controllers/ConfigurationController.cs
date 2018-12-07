@@ -1,16 +1,15 @@
 ﻿using FinOps.Models;
+using LNF;
 using LNF.Cache;
 using LNF.CommonTools;
 using LNF.Data;
 using LNF.Models.Data;
 using LNF.Repository;
 using LNF.Repository.Data;
-using OnlineServices.Api.Billing;
 using OnlineServices.Api.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Web.Mvc;
 
 namespace FinOps.Controllers
@@ -32,13 +31,13 @@ namespace FinOps.Controllers
         }
 
         [HttpPost, Route("configuration/remote-processing/save")]
-        public async Task<ActionResult> RemoteProcessingSave(RemoteProcessingModel model)
+        public ActionResult RemoteProcessingSave(RemoteProcessingModel model)
         {
-            await SaveRemoteProcessingAsync(model);
+            SaveRemoteProcessingAsync(model);
             return RedirectToAction("RemoteProcessing");
         }
 
-        private async Task SaveRemoteProcessingAsync(RemoteProcessingModel model)
+        private void SaveRemoteProcessingAsync(RemoteProcessingModel model)
         {
             if (model.ClientID == 0)
             {
@@ -58,16 +57,13 @@ namespace FinOps.Controllers
                 return;
             }
 
-            using (var dc = new DataClient())
+            var dc = new DataClient();
+            dc.InsertClientRemote(new ClientRemoteItem
             {
-                await dc.AddClientRemote(new ClientRemoteModel()
-                {
-                    ClientID = model.ClientID,
-                    RemoteClientID = model.RemoteClientID,
-                    AccountID = model.RemoteAccountID,
-                    Active = true
-                }, model.Period);
-            }
+                ClientID = model.ClientID,
+                RemoteClientID = model.RemoteClientID,
+                AccountID = model.RemoteAccountID
+            }, model.Period);
         }
 
 
@@ -116,14 +112,10 @@ namespace FinOps.Controllers
         }
 
         [Route("configuration/account-subsidy/disable/{AccountSubsidyID}")]
-        public async Task<ActionResult> DisableAccountSubsidy(AccountSubsidyModel model)
+        public ActionResult DisableAccountSubsidy(AccountSubsidyModel model)
         {
-            using (var bc = new BillingClient())
-            {
-                var acctSubsidy = await bc.DisableAccountSubsidy(model.AccountSubsidyID);
-                Session["EnableDate"] = acctSubsidy.EnableDate;
-            }
-
+            var acctSubsidy = ServiceProvider.Current.Billing.AccountSubsidy.DisableAccountSubsidy(model.AccountSubsidyID);
+            Session["EnableDate"] = acctSubsidy.EnableDate;
             return RedirectToAction("AccountSubsidy");
         }
 
@@ -141,7 +133,7 @@ namespace FinOps.Controllers
         public ActionResult Holidays(HolidaysModel model)
         {
             model.CurrentUser = CacheManager.Current.CurrentUser;
-            model.CurrentUserClientAccounts = CacheManager.Current.CurrentUserClientAccounts();
+            model.CurrentUserClientAccounts = CacheManager.Current.GetCurrentUserClientAccounts().ToList();
             model.StartDate = GetHolidayStartDate();
             model.EndDate = GetHolidayEndDate();
             model.Holidays = DA.Current.Query<Holiday>().Where(x => x.HolidayDate >= model.StartDate).OrderBy(x => x.HolidayDate).ToList();
@@ -152,7 +144,7 @@ namespace FinOps.Controllers
                 var defaultFeed = new GoogleCalendarFeed()
                 {
                     GoogleCalendarID = "en.usa#holiday@group.v.calendar.google.com",
-                    Client = DA.Current.Single<Client>(CacheManager.Current.ClientID),
+                    Client = DA.Current.Single<Client>(CacheManager.Current.CurrentUser.ClientID),
                     Created = DateTime.Now,
                     LastUsed = DateTime.Now,
                     Active = true
@@ -196,7 +188,7 @@ namespace FinOps.Controllers
         {
             if (!string.IsNullOrEmpty(model.GoogleCalendarID))
             {
-                model.Client = DA.Current.Single<Client>(CacheManager.Current.ClientID);
+                model.Client = DA.Current.Single<Client>(CacheManager.Current.CurrentUser.ClientID);
                 model.Created = DateTime.Now;
                 model.LastUsed = DateTime.Now;
                 model.Active = true;

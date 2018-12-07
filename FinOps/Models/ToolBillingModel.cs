@@ -20,26 +20,23 @@ namespace FinOps.Models
         public string Account { get; set; }
         public IEnumerable<ReservationDurationItem> Durations { get; set; }
 
-        public void Load(ReservationDurations rd)
+        public void LoadReservationDurations(ReservationDurations rd)
         {
             Durations = rd.Where(x => ReservationFilter(x) && ActivityFilter(x) && ClientFilter(x) && ResourceFilter(x) && ProcessTechFilter(x) && AccountFilter(x));
         }
 
         public IEnumerable<ReservationDurationItem> GetTransferReservations(ReservationDurationItem item)
         {
-
-            ReservationDateRange range = new ReservationDateRange(item.Reservation.ReservationID, item.Reservation.ChargeBeginDateTime, item.Reservation.ChargeEndDateTime);
+            ReservationDateRange range = new ReservationDateRange(item.Reservation.ResourceID, item.Reservation.ChargeBeginDateTime, item.Reservation.ChargeEndDateTime);
             ReservationDurations durations = range.CreateReservationDurations();
-            return durations.Where(x => x.Reservation != item.Reservation && x.UtilizedDuration.TotalSeconds > 0);
+            return durations.Where(x => x.Reservation.ReservationID != item.Reservation.ReservationID && x.UtilizedDuration.TotalSeconds > 0);
         }
 
         private ReservationDateRange GetRange()
         {
             ReservationDateRange result;
 
-            int resourceId;
-
-            if (int.TryParse(Resource, out resourceId))
+            if (int.TryParse(Resource, out int resourceId))
                 result = new ReservationDateRange(resourceId, StartDate.Value, EndDate.Value);
             else
                 result = new ReservationDateRange(StartDate.Value, EndDate.Value);
@@ -57,10 +54,9 @@ namespace FinOps.Models
 
         private bool ActivityFilter(ReservationDurationItem item)
         {
-            int activityId;
             if (!string.IsNullOrEmpty(Activity))
             {
-                if (int.TryParse(Activity, out activityId))
+                if (int.TryParse(Activity, out int activityId))
                     return item.Reservation.ActivityID == activityId;
                 else
                     return item.Reservation.ActivityName.ToLower().Contains(Activity.ToLower());
@@ -71,10 +67,9 @@ namespace FinOps.Models
 
         private bool ClientFilter(ReservationDurationItem item)
         {
-            int clientId;
             if (!string.IsNullOrEmpty(Client))
             {
-                if (int.TryParse(Client, out clientId))
+                if (int.TryParse(Client, out int clientId))
                     return item.Reservation.ClientID == clientId;
                 else
                     return item.Reservation.DisplayName.ToLower().Contains(Client.ToLower())
@@ -86,10 +81,9 @@ namespace FinOps.Models
 
         private bool ResourceFilter(ReservationDurationItem item)
         {
-            int resourceId;
             if (!string.IsNullOrEmpty(Resource))
             {
-                if (int.TryParse(Resource, out resourceId))
+                if (int.TryParse(Resource, out int resourceId))
                     return item.Reservation.ResourceID == resourceId;
                 else
                     return item.Reservation.ResourceName.ToLower().Contains(Resource.ToLower());
@@ -100,10 +94,9 @@ namespace FinOps.Models
 
         private bool ProcessTechFilter(ReservationDurationItem item)
         {
-            int procTechId;
             if (!string.IsNullOrEmpty(ProcessTech))
             {
-                if (int.TryParse(ProcessTech, out procTechId))
+                if (int.TryParse(ProcessTech, out int procTechId))
                     return item.Reservation.ProcessTechID == procTechId;
                 else
                     return item.Reservation.ProcessTechName.ToLower().Contains(ProcessTech.ToLower());
@@ -114,10 +107,9 @@ namespace FinOps.Models
 
         private bool AccountFilter(ReservationDurationItem item)
         {
-            int accountId;
             if (!string.IsNullOrEmpty(Account))
             {
-                if (int.TryParse(Account, out accountId))
+                if (int.TryParse(Account, out int accountId))
                     return item.Reservation.AccountID == accountId;
                 else
                     return item.Reservation.AccountName.ToLower().Contains(Account.ToLower())
@@ -133,15 +125,18 @@ namespace FinOps.Models
 
             if (!item.Reservation.IsCancelledBeforeCutoff)
             {
-                result = Convert.ToDecimal(item.StandardDuration.TotalHours) * item.Reservation.Cost.HourlyRate();
+                var standardHours = Math.Round(Convert.ToDecimal(item.StandardDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+                result = standardHours * item.Reservation.Cost.HourlyRate();
             }
 
-            return Math.Round(result, 3, MidpointRounding.AwayFromZero);
+            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
         public decimal GetOverTimeCharge(ReservationDurationItem item)
         {
-            return Math.Round(Convert.ToDecimal(item.OverTimeDuration.TotalHours) * item.Reservation.Cost.OverTimeRate(), 3, MidpointRounding.AwayFromZero);
+            var overtimeHours = Math.Round(Convert.ToDecimal(item.OverTimeDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+            var result = overtimeHours * item.Reservation.Cost.OverTimeRate();
+            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
         public decimal GetBookingFeeCharge(ReservationDurationItem item)
@@ -149,9 +144,12 @@ namespace FinOps.Models
             decimal result = 0M;
 
             if (item.Reservation.IsCancelledBeforeCutoff)
-                result = Convert.ToDecimal(item.StandardDuration.TotalHours) * item.Reservation.Cost.BookingFeeRate();
+            {
+                var standardHours = Math.Round(Convert.ToDecimal(item.StandardDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+                result = standardHours * item.Reservation.Cost.BookingFeeRate();
+            }
 
-            return Math.Round(result, 3, MidpointRounding.AwayFromZero);
+            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
         public decimal GetPerUseCharge(ReservationDurationItem item)
@@ -161,7 +159,7 @@ namespace FinOps.Models
             if (!item.Reservation.IsCancelledBeforeCutoff)
                 result = item.Reservation.Cost.PerUseRate();
 
-            return Math.Round(result, 3, MidpointRounding.AwayFromZero);
+            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
         public decimal GetPerUseBookingFeeCharge(ReservationDurationItem item)
@@ -171,7 +169,7 @@ namespace FinOps.Models
             if (item.Reservation.IsCancelledBeforeCutoff)
                 result = item.Reservation.Cost.PerUseBookingFeeRate();
 
-            return Math.Round(result, 3, MidpointRounding.AwayFromZero);
+            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
         public decimal GetTotalCharge(ReservationDurationItem item)

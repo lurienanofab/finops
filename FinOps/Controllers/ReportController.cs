@@ -2,10 +2,11 @@
 using LNF;
 using LNF.Billing;
 using LNF.CommonTools;
+using LNF.Models.Billing.Reports;
 using LNF.Models.Data;
+using LNF.Models.Scheduler;
 using LNF.Repository;
 using LNF.Repository.Data;
-using LNF.Repository.Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,10 @@ namespace FinOps.Controllers
             return View(model);
         }
 
-        private IList<ClientModel> FilterByPeriod(DateTime period)
+        private IList<ClientItem> FilterByPeriod(DateTime period)
         {
             IQueryable<ActiveLogClient> alogs = DA.Current.Query<ActiveLogClient>().Where(x => x.EnableDate < period && (x.DisableDate == null || x.DisableDate.Value > period));
-            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).Model<ClientModel>();
+            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).Model<ClientItem>();
         }
 
         [Route("report/misc-charges/run")]
@@ -56,33 +57,87 @@ namespace FinOps.Controllers
         public ActionResult ToolBilling(ToolBillingModel model)
         {
             ReservationDateRange range;
+            ReservationItem rsv = null;
+            int resourceId = 0;
+
+            if (model.ReservationID > 0)
+            {
+                rsv = ServiceProvider.Current.Scheduler.GetReservation(model.ReservationID.Value);
+                resourceId = rsv.ResourceID;
+            }
 
             if (!model.StartDate.HasValue || !model.EndDate.HasValue)
             {
-                if (model.ReservationID > 0)
+                ModelState.Remove("StartDate");
+                ModelState.Remove("EndDate");
+
+                if (rsv != null)
                 {
-                    ModelState.Remove("StartDate");
-                    ModelState.Remove("EndDate");
-                    Reservation rsv = DA.Scheduler.Reservation.Single(model.ReservationID);
-                    model.StartDate = rsv.ChargeBeginDateTime().FirstOfMonth();
+                    model.StartDate = rsv.ChargeBeginDateTime.FirstOfMonth();
                     model.EndDate = model.StartDate.Value.AddMonths(1);
-                    range = new ReservationDateRange(rsv.Resource.ResourceID, model.StartDate.Value, model.EndDate.Value);
                 }
             }
 
             if (model.StartDate.HasValue && model.EndDate.HasValue)
             {
-                int resourceId;
-                if (int.TryParse(model.Resource, out resourceId))
-                    range = new ReservationDateRange(resourceId, model.StartDate.Value, model.EndDate.Value);
-                else
-                    range = new ReservationDateRange(model.StartDate.Value, model.EndDate.Value);
+                if (rsv == null)
+                {
+                    int.TryParse(model.Resource, out resourceId);
+                }
 
+                range = new ReservationDateRange(resourceId, model.StartDate.Value, model.EndDate.Value);
                 ReservationDurations rd = range.CreateReservationDurations();
-                model.Load(rd);
+                model.LoadReservationDurations(rd);
             }
 
             return View("ToolBilling", model);
+        }
+
+        [HttpGet, Route("report/financial-manager")]
+        public ActionResult FinancialManager(DateTime? period = null, string message = null, string option = null)
+        {
+            // Possible option values:
+            //  <null> (default): send email to manager and cc address
+            //  nomgr: do not send email to manager, only cc addresss (for debugging)
+
+            Session["FinancialManagerMessage"] = message;
+            Session["FinancialManagerOption"] = option;
+
+            var p = period.GetValueOrDefault(DateTime.Now.FirstOfMonth().AddMonths(-1));
+
+            ViewBag.Period = p;
+            ViewBag.Message = message;
+            ViewBag.Option = option;
+
+            var emails = ServiceProvider.Current.Billing.Report.ViewFinancialManagerReport(p, 0, 0, message);
+
+            if (ViewBag.Option == "nomgr")
+            {
+                foreach (var e in emails)
+                    e.ToAddress = null;
+            }
+
+            ViewBag.Emails = emails;
+
+            return View();
+        }
+
+        [HttpGet, Route("report/financial-manager/send")]
+        public ActionResult SendFinancialManagerEmail(DateTime period, int managerOrgId)
+        {
+            string message = Session["FinancialManagerMessage"] == null ? string.Empty : Convert.ToString(Session["FinancialManagerMessage"]);
+            string option = Session["FinancialManagerOption"] == null ? string.Empty : Convert.ToString(Session["FinancialManagerOption"]);
+
+            ServiceProvider.Current.Billing.Report.SendFinancialManagerReport(new FinancialManagerReportOptions
+            {
+                IncludeManager = option != "nomgr",
+                Message = message,
+                Period = period,
+                ClientID = 0,
+                ManagerOrgID = managerOrgId
+            });
+
+            return RedirectToAction("FinancialManager", new { period = period.ToString("yyyy-MM-dd"), message });
         }
 
         [HttpGet, Route("report/external-invoice")]

@@ -281,7 +281,7 @@
                     'type': 'POST',
                     'data': args
                 }).fail(function (jqXHR, textStatus, errorThrown) {
-                    var errmsg = (jqXHR.responseJSON && jqXHR.responseJSON.Message) ? jqXHR.responseJSON.Message : errorThrown;
+                    var errmsg = jqXHR.responseJSON && jqXHR.responseJSON.Message ? jqXHR.responseJSON.Message : errorThrown;
                     $(".create-error", $this).show().find(".error-message").html(errmsg);
                 }).always(function () {
                     refreshClientRemotes(period).always(function () {
