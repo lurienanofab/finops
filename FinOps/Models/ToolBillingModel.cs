@@ -162,19 +162,9 @@ namespace FinOps.Models
             return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
-        public decimal GetPerUseBookingFeeCharge(ReservationDurationItem item)
-        {
-            decimal result = 0M;
-
-            if (item.Reservation.IsCancelledBeforeCutoff)
-                result = item.Reservation.Cost.PerUseBookingFeeRate();
-
-            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
-        }
-
         public decimal GetTotalCharge(ReservationDurationItem item)
         {
-            return GetStandardCharge(item) + GetBookingFeeCharge(item) + GetOverTimeCharge(item) + GetPerUseCharge(item) + GetPerUseBookingFeeCharge(item);
+            return GetStandardCharge(item) + GetBookingFeeCharge(item) + GetOverTimeCharge(item) + GetPerUseCharge(item);
         }
     }
 }
