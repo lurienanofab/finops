@@ -22,7 +22,10 @@ namespace FinOps.Models
 
         public void LoadReservationDurations(ReservationDurations rd)
         {
-            Durations = rd.Where(x => ReservationFilter(x) && ActivityFilter(x) && ClientFilter(x) && ResourceFilter(x) && ProcessTechFilter(x) && AccountFilter(x));
+            // OrderBy is
+            Durations = rd.Where(x => ReservationFilter(x) && ActivityFilter(x) && ClientFilter(x) && ResourceFilter(x) && ProcessTechFilter(x) && AccountFilter(x))
+                .OrderBy(x => x.Reservation.ActDate)
+                .ThenBy(x => x.Reservation.ReservationID).ToList();
         }
 
         public IEnumerable<ReservationDurationItem> GetTransferReservations(ReservationDurationItem item)
@@ -125,18 +128,18 @@ namespace FinOps.Models
 
             if (!item.Reservation.IsCancelledBeforeCutoff)
             {
-                var standardHours = Math.Round(Convert.ToDecimal(item.StandardDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+                var standardHours = GetRoundedHours(item.StandardDuration, 2);
                 result = standardHours * item.Reservation.Cost.HourlyRate();
             }
 
-            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
+            return GetRoundedMoney(result);
         }
 
         public decimal GetOverTimeCharge(ReservationDurationItem item)
         {
-            var overtimeHours = Math.Round(Convert.ToDecimal(item.OverTimeDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+            var overtimeHours = GetRoundedHours(item.OverTimeDuration, 4);
             var result = overtimeHours * item.Reservation.Cost.OverTimeRate();
-            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
+            return GetRoundedMoney(result);
         }
 
         public decimal GetBookingFeeCharge(ReservationDurationItem item)
@@ -145,11 +148,11 @@ namespace FinOps.Models
 
             if (item.Reservation.IsCancelledBeforeCutoff)
             {
-                var standardHours = Math.Round(Convert.ToDecimal(item.StandardDuration.TotalHours), 2, MidpointRounding.AwayFromZero);
+                var standardHours = GetRoundedHours(item.StandardDuration, 2);
                 result = standardHours * item.Reservation.Cost.BookingFeeRate();
             }
 
-            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
+            return GetRoundedMoney(result);
         }
 
         public decimal GetPerUseCharge(ReservationDurationItem item)
@@ -159,12 +162,25 @@ namespace FinOps.Models
             if (!item.Reservation.IsCancelledBeforeCutoff)
                 result = item.Reservation.Cost.PerUseRate();
 
-            return Math.Round(result, 2, MidpointRounding.AwayFromZero);
+            return GetRoundedMoney(result);
         }
 
         public decimal GetTotalCharge(ReservationDurationItem item)
         {
             return GetStandardCharge(item) + GetBookingFeeCharge(item) + GetOverTimeCharge(item) + GetPerUseCharge(item);
+        }
+
+        private decimal GetRoundedHours(TimeSpan ts, int decimals)
+        {
+            var minutes = ts.TotalMinutes;
+            var hours = minutes / 60D;
+            var rounded = Math.Round(hours, decimals, MidpointRounding.AwayFromZero);
+            return Convert.ToDecimal(rounded);
+        }
+
+        private decimal GetRoundedMoney(decimal val)
+        {
+            return Math.Round(val, 2, MidpointRounding.AwayFromZero);
         }
     }
 }

@@ -6,6 +6,7 @@ using LNF.Models.Billing.Reports;
 using LNF.Models.Data;
 using LNF.Models.Scheduler;
 using LNF.Repository;
+using LNF.Repository.Billing;
 using LNF.Repository.Data;
 using System;
 using System.Collections.Generic;

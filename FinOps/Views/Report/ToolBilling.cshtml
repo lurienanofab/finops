@@ -6,6 +6,14 @@
     ViewBag.Title = "Tool Billing Report";
 }
 
+@section styles{
+    <style>
+        .reservation-durations > tbody > tr > td {
+            vertical-align: middle;
+        }
+    </style>
+}
+
 <h2>Tool Billing Report</h2>
 
 <div>
@@ -69,7 +77,7 @@
 {
     if (Model.ReservationID.GetValueOrDefault(0) == 0)
     {
-        <table class="table table-hover">
+        <table class="table table-hover reservation-durations">
             <thead>
                 <tr>
                     <th>ReservationID</th>
@@ -90,6 +98,8 @@
                     <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The time covered by overlapping reservations.">Transferred</span></th>
                     <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The total chargeable time minus the transferred duration (includes overtime).">Utilized</span></th>
                     <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The time billed at the standard rate (excludes overtime).">Standard</span></th>
+                    <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The percentage of the total charge that was forgiven.">Forgiven %</span></th>
+                    <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The total charge for this reservation. Click the ReservationID to see detail.">Total Charge</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -105,15 +115,17 @@
                         <td class="text-center">@(item.Reservation.IsStarted ? "Yes" : "No")</td>
                         <td class="text-center">@(item.Reservation.IsActive ? "No" : "Yes")</td>
                         <td class="text-center">@(item.Reservation.IsCancelledBeforeCutoff ? "Yes" : "No")</td>
-                        <td>@item.Reservation.BeginDateTime.ToString("MM/dd/yyyy hh:mm:ss tt")</td>
-                        <td>@item.Reservation.EndDateTime.ToString("MM/dd/yyyy hh:mm:ss tt")</td>
-                        <td class="text-right">@item.ScheduledDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.ActualDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.ChargeDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.OverTimeDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.TransferredDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.UtilizedDuration.TotalMinutes.ToString("0.00")</td>
-                        <td class="text-right">@item.StandardDuration.TotalMinutes.ToString("0.00")</td>
+                        <td>@Html.Raw(item.Reservation.BeginDateTime.ToString("MM/dd/yyyy'<br>'hh:mm:ss tt"))</td>
+                        <td>@Html.Raw(item.Reservation.EndDateTime.ToString("MM/dd/yyyy'<br>'hh:mm:ss tt"))</td>
+                        <td class="text-right">@item.ScheduledDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.ActualDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.ChargeDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.OverTimeDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.TransferredDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.UtilizedDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.StandardDuration.TotalMinutes.ToString("0.0000")</td>
+                        <td class="text-right">@item.GetForgivenPercentage().ToString("0.00%")</td>
+                        <td class="text-right">@Model.GetTotalCharge(item).ToString("C")</td>
                     </tr>
                 }
             </tbody>
@@ -201,29 +213,43 @@
                                         <th>Scheduled&nbsp;<span class="text-muted">(Scheduled duration: EndDateTime - BeginDateTime)</span></th>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.BeginDateTime)</td>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.EndDateTime)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ScheduledDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ScheduledDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ScheduledDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ScheduledDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Actual&nbsp;<span class="text-muted">(Actual duration: ActualEndDateTime - ActualBeginDateTime)</span></th>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.ActualBeginDateTime)</td>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.ActualEndDateTime)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ActualDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ActualDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActualDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActualDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Chargeable&nbsp;<span class="text-muted">(Total chargeable time: ChargeEndDateTime - ChargeBeginDateTime)*</span></th>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.ChargeBeginDateTime)</td>
                                         <td>@string.Format("{0:MM/dd/yyyy hh:mm:ss tt}", item.Reservation.ChargeEndDateTime)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ChargeDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ChargeDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ChargeDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ChargeDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
-                                        <th>Activated Used</th>
-                                        <td></td>
-                                        <td></td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ActivatedUsedDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.ActivatedUsedDuration.TotalHours)</td>
+                                        <th>Activated Used&nbsp;<span class="text-muted">(Time used by an activated reservation, excluding overtime)</span></th>
+                                        <td>--</td>
+                                        <td>--</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActivatedUsedDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActivatedUsedDuration.TotalHours)</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Activated Unused&nbsp;<span class="text-muted">(Time not used by an activated reservation, i.e. unused time from starting late or ending early)</span></th>
+                                        <td>--</td>
+                                        <td>--</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActivatedUnusedDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.ActivatedUnusedDuration.TotalHours)</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Unactivated&nbsp;<span class="text-muted">(Time not used by an unactivated reservation, i.e. unused time from no-show reservations)</span></th>
+                                        <td>--</td>
+                                        <td>--</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.UnactivatedDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.UnactivatedDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Over Time&nbsp;<span class="text-muted">(Time used after the scheduled end time: ActualEndDateTime - EndDateTime)</span></th>
@@ -237,33 +263,33 @@
                                             <td>--</td>
                                             <td>--</td>
                                         }
-                                        <td class="text-right">@string.Format("{0:0.00}", item.OverTimeDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.OverTimeDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.OverTimeDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.OverTimeDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Transferred&nbsp;<span class="text-muted">(Time used by overlapping reservations)</span></th>
                                         <td>--</td>
                                         <td>--</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.TransferredDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.TransferredDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.TransferredDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.TransferredDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Utilized&nbsp;<span class="text-muted">(Time not transferred: Chargeable - Transferred)</span></th>
                                         <td>--</td>
                                         <td>--</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.UtilizedDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.UtilizedDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.UtilizedDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.UtilizedDuration.TotalHours)</td>
                                     </tr>
                                     <tr>
                                         <th>Standard&nbsp;<span class="text-muted">(Time billed at the standard rate: Chargeable - Transferred - OverTime)</span></th>
                                         <td>--</td>
                                         <td>--</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.StandardDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.StandardDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.StandardDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.StandardDuration.TotalHours)</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="text-muted">* ChargeBeginDateTime is whichever is earliest, ActualBeginDateTime or BeginDateTime. ChargeEndDateTime is whichever is latest, ActualEndDateTime or EndDateTime.</div>
+                            <span class="text-muted">* ChargeBeginDateTime is whichever is earliest, ActualBeginDateTime or BeginDateTime. ChargeEndDateTime is whichever is latest, ActualEndDateTime or EndDateTime. Chargeable should be equal to Activated Used + Activated Unused + Unactivated + Over Time.</span>
                             <hr />
                         </div>
                     </div>
@@ -273,7 +299,7 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Duration</th>
+                                        <th>&nbsp;</th>
                                         <th class="text-right" style="width: 90px;">Minutes</th>
                                         <th class="text-right" style="width: 90px;">Hours</th>
                                         <th class="text-right" style="width: 90px;">Rate</th>
@@ -283,22 +309,22 @@
                                 <tbody>
                                     <tr>
                                         <th>Standard</th>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? 0 : item.StandardDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? 0 : item.StandardDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.Reservation.IsCancelledBeforeCutoff ? 0 : item.StandardDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.Reservation.IsCancelledBeforeCutoff ? 0 : item.StandardDuration.TotalHours)</td>
                                         <td class="text-right">@string.Format("{0:C}", item.Reservation.Cost.HourlyRate())</td>
                                         <td class="text-right">@string.Format("{0:C}", Model.GetStandardCharge(item))</td>
                                     </tr>
                                     <tr>
                                         <th>Over Time</th>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.OverTimeDuration.TotalMinutes)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.OverTimeDuration.TotalHours)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.OverTimeDuration.TotalMinutes)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.OverTimeDuration.TotalHours)</td>
                                         <td class="text-right">@string.Format("{0:C}", item.Reservation.Cost.OverTimeRate())</td>
                                         <td class="text-right">@string.Format("{0:C}", Model.GetOverTimeCharge(item))</td>
                                     </tr>
                                     <tr>
                                         <th>Booking Fee</th>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? item.StandardDuration.TotalMinutes : 0)</td>
-                                        <td class="text-right">@string.Format("{0:0.00}", item.Reservation.IsCancelledBeforeCutoff ? item.StandardDuration.TotalHours : 0)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.Reservation.IsCancelledBeforeCutoff ? item.StandardDuration.TotalMinutes : 0)</td>
+                                        <td class="text-right">@string.Format("{0:0.0000}", item.Reservation.IsCancelledBeforeCutoff ? item.StandardDuration.TotalHours : 0)</td>
                                         <td class="text-right">@string.Format("{0:C}", item.Reservation.Cost.BookingFeeRate())</td>
                                         <td class="text-right">@string.Format("{0:C}", Model.GetBookingFeeCharge(item))</td>
                                     </tr>
@@ -352,8 +378,8 @@
                                             <tr>
                                                 <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), ReservationID = trans.Reservation.ReservationID })">@trans.Reservation.ReservationID</a></td>
                                                 <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Client = trans.Reservation.ClientID })">@trans.Reservation.DisplayName</a></td>
-                                                <td class="text-right">@string.Format("{0:0.00}", trans.UtilizedDuration.TotalMinutes)</td>
-                                                <td class="text-right">@string.Format("{0:0.00}", trans.UtilizedDuration.TotalHours)</td>
+                                                <td class="text-right">@string.Format("{0:0.0000}", trans.UtilizedDuration.TotalMinutes)</td>
+                                                <td class="text-right">@string.Format("{0:0.0000}", trans.UtilizedDuration.TotalHours)</td>
                                             </tr>
                                         }
                                     </tbody>
