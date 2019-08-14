@@ -15,7 +15,7 @@ namespace FinOps.Models
         public int Quantity { get; set; }
         public double UnitCost { get; set; }
         public string Description { get; set; }
-        public IEnumerable<ClientItem> Clients { get; set; }
+        public IEnumerable<IClient> Clients { get; set; }
         public IEnumerable<MiscBillingCharge> MiscBillingCharges { get; set; }
     }
 }

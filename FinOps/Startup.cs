@@ -1,4 +1,5 @@
 ﻿using LNF;
+using LNF.Impl.Context;
 using LNF.Impl.DependencyInjection.Web;
 using LNF.Web;
 using Microsoft.Owin;
@@ -14,7 +15,8 @@ namespace FinOps
     {
         public override void Configuration(IAppBuilder app)
         {
-            ServiceProvider.Current = IOC.Resolver.GetInstance<ServiceProvider>();
+            var ioc = new IOC();
+            ServiceProvider.Configure(ioc.Resolver);
             GlobalFilters.Filters.Add(new ReturnToAttribute());
             base.Configuration(app);
         }

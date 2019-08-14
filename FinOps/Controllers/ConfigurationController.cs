@@ -1,11 +1,12 @@
 ﻿using FinOps.Models;
 using LNF;
-using LNF.Cache;
 using LNF.CommonTools;
 using LNF.Data;
+using LNF.Models.Billing;
 using LNF.Models.Data;
 using LNF.Repository;
 using LNF.Repository.Data;
+using LNF.Web;
 using OnlineServices.Api.Data;
 using System;
 using System.Collections.Generic;
@@ -57,8 +58,7 @@ namespace FinOps.Controllers
                 return;
             }
 
-            var dc = new DataClient();
-            dc.InsertClientRemote(new ClientRemoteItem
+            ServiceProvider.Current.Data.Client.InsertClientRemote(new ClientRemoteItem
             {
                 ClientID = model.ClientID,
                 RemoteClientID = model.RemoteClientID,
@@ -114,7 +114,9 @@ namespace FinOps.Controllers
         [Route("configuration/account-subsidy/disable/{AccountSubsidyID}")]
         public ActionResult DisableAccountSubsidy(AccountSubsidyModel model)
         {
-            var acctSubsidy = ServiceProvider.Current.Billing.AccountSubsidy.DisableAccountSubsidy(model.AccountSubsidyID);
+            var disableResult = ServiceProvider.Current.Billing.AccountSubsidy.DisableAccountSubsidy(model.AccountSubsidyID);
+            IAccountSubsidy acctSubsidy = ServiceProvider.Current.Billing.AccountSubsidy.GetSingleAccountSubsidy(model.AccountSubsidyID);
+
             Session["EnableDate"] = acctSubsidy.EnableDate;
             return RedirectToAction("AccountSubsidy");
         }
@@ -132,8 +134,8 @@ namespace FinOps.Controllers
         [Route("configuration/holidays/{SelectedGoogleCalendarID?}")]
         public ActionResult Holidays(HolidaysModel model)
         {
-            model.CurrentUser = CacheManager.Current.CurrentUser;
-            model.CurrentUserClientAccounts = CacheManager.Current.GetCurrentUserClientAccounts().ToList();
+            model.CurrentUser = HttpContext.CurrentUser();
+            model.CurrentUserClientAccounts = HttpContext.GetCurrentUserClientAccounts();
             model.StartDate = GetHolidayStartDate();
             model.EndDate = GetHolidayEndDate();
             model.Holidays = DA.Current.Query<Holiday>().Where(x => x.HolidayDate >= model.StartDate).OrderBy(x => x.HolidayDate).ToList();
@@ -144,7 +146,7 @@ namespace FinOps.Controllers
                 var defaultFeed = new GoogleCalendarFeed()
                 {
                     GoogleCalendarID = "en.usa#holiday@group.v.calendar.google.com",
-                    Client = DA.Current.Single<Client>(CacheManager.Current.CurrentUser.ClientID),
+                    Client = DA.Current.Single<Client>(HttpContext.CurrentUser().ClientID),
                     Created = DateTime.Now,
                     LastUsed = DateTime.Now,
                     Active = true
@@ -188,7 +190,7 @@ namespace FinOps.Controllers
         {
             if (!string.IsNullOrEmpty(model.GoogleCalendarID))
             {
-                model.Client = DA.Current.Single<Client>(CacheManager.Current.CurrentUser.ClientID);
+                model.Client = DA.Current.Single<Client>(HttpContext.CurrentUser().ClientID);
                 model.Created = DateTime.Now;
                 model.LastUsed = DateTime.Now;
                 model.Active = true;

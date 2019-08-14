@@ -8,8 +8,8 @@ namespace FinOps.Models
 {
     public class ModelBase
     {
-        public ClientItem CurrentUser { get; set; }
-        public IList<ClientAccountItem> CurrentUserClientAccounts { get; set; }
+        public IClient CurrentUser { get; set; }
+        public IEnumerable<IClientAccount> CurrentUserClientAccounts { get; set; }
         public AlertMessage Message { get; set; }
     }
 

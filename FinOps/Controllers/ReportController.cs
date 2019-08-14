@@ -34,10 +34,10 @@ namespace FinOps.Controllers
             return View(model);
         }
 
-        private IList<ClientItem> FilterByPeriod(DateTime period)
+        private IEnumerable<IClient> FilterByPeriod(DateTime period)
         {
             IQueryable<ActiveLogClient> alogs = DA.Current.Query<ActiveLogClient>().Where(x => x.EnableDate < period && (x.DisableDate == null || x.DisableDate.Value > period));
-            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).Model<ClientItem>();
+            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).CreateModels<IClient>();
         }
 
         [Route("report/misc-charges/run")]
@@ -58,12 +58,12 @@ namespace FinOps.Controllers
         public ActionResult ToolBilling(ToolBillingModel model)
         {
             ReservationDateRange range;
-            ReservationItem rsv = null;
+            IReservation rsv = null;
             int resourceId = 0;
 
             if (model.ReservationID > 0)
             {
-                rsv = ServiceProvider.Current.Scheduler.GetReservation(model.ReservationID.Value);
+                rsv = ServiceProvider.Current.Scheduler.Reservation.GetReservation(model.ReservationID.Value);
                 resourceId = rsv.ResourceID;
             }
 
@@ -110,7 +110,14 @@ namespace FinOps.Controllers
             ViewBag.Message = message;
             ViewBag.Option = option;
 
-            var emails = ServiceProvider.Current.Billing.Report.ViewFinancialManagerReport(p, 0, 0, message);
+            var emails = ServiceProvider.Current.Billing.Report.GetFinancialManagerReportEmails(new FinancialManagerReportOptions
+            {
+                Period = p,
+                ClientID = 0,
+                ManagerOrgID = 0,
+                Message = message,
+                IncludeManager = true
+            });
 
             if (ViewBag.Option == "nomgr")
             {
@@ -184,6 +191,24 @@ namespace FinOps.Controllers
             //{
             //    model.Invoices = await bc.GetInvoices(model.Period);
             //}
+        }
+
+        [HttpGet, Route("report/subsidy")]
+        public ActionResult Subsidy(DateTime? period = null, int clientId = 0)
+        {
+            var model = new SubsidyModel
+            {
+                Period = period.GetValueOrDefault(DateTime.Now.FirstOfMonth().AddMonths(-1)),
+                ClientID = clientId
+            };
+
+            return View(model);
+        }
+
+        [HttpPost, Route("report/subsidy")]
+        public ActionResult Subsidy(SubsidyModel model)
+        {
+            return RedirectToAction("Subsidy", new { period = model.Period, clientId = model.ClientID });
         }
     }
 }

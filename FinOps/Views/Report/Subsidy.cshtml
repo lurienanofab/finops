@@ -1,0 +1,29 @@
+﻿@using FinOps.Models;
+
+@model SubsidyModel
+@{
+    ViewBag.Title = "Subsidy";
+}
+
+<h2>
+    Subsidy
+    <br />
+    <small>
+        <a href="@Url.Action("Index", "Home")">&larr; Return to Main Page</a>
+    </small>
+</h2>
+
+<hr />
+
+@using (Html.BeginForm("Subsidy", "Report", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    <div class="form-group">
+        <label class="control-label col-sm-1">Period</label>
+        <div class="col-sm-1">
+            @Html.TextBoxFor(x => x.Period, "{0:yyyy-MM-dd}", new { @class = "form-control" })
+        </div>
+    </div>
+}
+
+<hr />
+

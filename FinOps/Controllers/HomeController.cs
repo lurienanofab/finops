@@ -2,6 +2,7 @@
 using LNF;
 using LNF.Cache;
 using System.Web.Mvc;
+using LNF.Web;
 
 namespace FinOps.Controllers
 {
@@ -10,7 +11,7 @@ namespace FinOps.Controllers
         [Route("")]
         public ActionResult Index(HomeModel model)
         {
-            model.CurrentUser = CacheManager.Current.CurrentUser;
+            model.CurrentUser = HttpContext.CurrentUser();
             return View(model);
         }
 

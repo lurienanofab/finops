@@ -136,6 +136,7 @@
     <Compile Include="Models\MiscChargesModel.cs" />
     <Compile Include="Models\ModelBase.cs" />
     <Compile Include="Models\RemoteProcessingModel.cs" />
+    <Compile Include="Models\SubsidyModel.cs" />
     <Compile Include="Models\ToolBillingModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
@@ -152,6 +153,7 @@
     <Content Include="Views\Configuration\Holidays.cshtml" />
     <Content Include="Views\Report\MiscCharges.cshtml" />
     <Content Include="Views\Report\FinancialManager.cshtml" />
+    <Content Include="Views\Report\Subsidy.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
