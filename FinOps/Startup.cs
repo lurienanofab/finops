@@ -1,9 +1,8 @@
-﻿using LNF;
-using LNF.Impl.Context;
-using LNF.Impl.DependencyInjection.Web;
+﻿using LNF.Impl.DependencyInjection;
 using LNF.Web;
 using Microsoft.Owin;
 using Owin;
+using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Routing;
 
@@ -11,20 +10,22 @@ using System.Web.Routing;
 
 namespace FinOps
 {
-    public class Startup : OwinStartup
+    public class Startup
     {
-        public override void Configuration(IAppBuilder app)
+        public void Configuration(IAppBuilder app)
         {
-            var ioc = new IOC();
-            ServiceProvider.Configure(ioc.Resolver);
-            GlobalFilters.Filters.Add(new ReturnToAttribute());
-            base.Configuration(app);
-        }
+            var webapp = new WebApp();
 
-        public override void ConfigureRoutes(RouteCollection routes)
-        {
-            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-            routes.MapMvcAttributeRoutes();
+            var wcc = webapp.GetConfiguration();
+            wcc.RegisterAllTypes();
+
+            webapp.BootstrapMvc(new[] { Assembly.GetExecutingAssembly() });
+
+            app.UseDataAccess(webapp.Context);
+
+            GlobalFilters.Filters.Add(new ReturnToAttribute());
+            AreaRegistration.RegisterAllAreas();
+            RouteConfig.RegisterRoutes(RouteTable.Routes);
         }
     }
 }

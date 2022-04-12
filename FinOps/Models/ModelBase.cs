@@ -1,4 +1,4 @@
-﻿using LNF.Models.Data;
+﻿using LNF.Data;
 using System;
 using System.Collections.Generic;
 using System.Web;

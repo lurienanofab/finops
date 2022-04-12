@@ -1,6 +1,5 @@
 ﻿using Ical.Net;
-using LNF.Repository;
-using LNF.Repository.Data;
+using LNF.Impl.Repository.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,25 +38,6 @@ namespace FinOps.Models
             return result;
         }
 
-        public void AddHoliday(CalendarEvent e)
-        {
-            var start = e.Start;
-            var summary = e.Summary;
-
-            // check for existing
-
-            var existing = DA.Current.Query<Holiday>().FirstOrDefault(x => x.Description == summary && x.HolidayDate == start);
-
-            if (existing == null)
-            {
-                DA.Current.SaveOrUpdate(new Holiday()
-                {
-                    Description = summary,
-                    HolidayDate = start
-                });
-            }
-        }
-
         public IEnumerable<CalendarEvent> GetEvents(DateTime sd, DateTime ed)
         {
             List<CalendarEvent> result = new List<CalendarEvent>();
@@ -69,9 +49,13 @@ namespace FinOps.Models
                 int index = 0;
                 foreach (var o in occurrences)
                 {
-                    var e = o.Source as CalendarEvent;
-                    result.Add(new CalendarEvent() { Uid = e.Uid, Summary = e.Summary, Start = o.Period.StartTime.AsSystemLocal, OccurrenceIndex = index });
-                    index++;
+                    var e = o.Source as Ical.Net.CalendarComponents.CalendarEvent;
+
+                    if (e != null)
+                    {
+                        result.Add(new CalendarEvent() { Uid = e.Uid, Summary = e.Summary, Start = o.Period.StartTime.AsSystemLocal, OccurrenceIndex = index });
+                        index++;
+                    }
                 }
             }
             else

@@ -13,178 +13,181 @@
 
 <h3>Current Holidays from @Model.StartDate.ToString("M/d/yyyy") to @Model.EndDate.ToString("M/d/yyyy")</h3>
 
-    @if (Model.Holidays.Count() > 0)
-    {
-        <div class="row">
-            <div class="col-sm-5">
-                <table class="table table-striped">
-                    <thead>
+@if (Model.Holidays.Count() > 0)
+{
+    <div class="row">
+        <div class="col-sm-5">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width: 150px;">Date</th>
+                        <th style="width: 60px;">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var holiday in Model.Holidays)
+                    {
                         <tr>
-                            <th>Description</th>
-                            <th style="width: 150px;">Date</th>
-                            <th style="width: 60px;">&nbsp;</th>
+                            <td>@holiday.Description</td>
+                            <td>@holiday.HolidayDate.ToString("M/d/yyyy")</td>
+                            <td style="text-align: right;"><a href="@Url.Action("DeleteHoliday", new { holidayId = holiday.HolidayID })">delete</a></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var holiday in Model.Holidays)
-                {
-                            <tr>
-                                <td>@holiday.Description</td>
-                                <td>@holiday.HolidayDate.ToString("M/d/yyyy")</td>
-                                <td style="text-align: right;"><a href="@Url.Action("DeleteHoliday", new { holidayId = holiday.HolidayID })">delete</a></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
-    else
-    {
-        <div class="alert alert-warning" role="alert" style="margin-top: 10px;">
-            No holidays found.
+    </div>
+}
+else
+{
+    <div class="alert alert-warning" role="alert" style="margin-top: 10px;">
+        No holidays found.
+    </div>
+}
+
+<hr />
+
+<h3>Add Holiday</h3>
+
+@using (Html.BeginForm("AddHoliday", "Configuration", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    <div class="form-group">
+        <label class="col-sm-1 control-label">Description</label>
+        <div class="col-sm-2">
+            @Html.TextBox("Description", string.Empty, new { @class = "form-control" })
         </div>
-    }
-
-    <hr />
-
-    <h3>Add Holiday</h3>
-
-    @using (Html.BeginForm("AddHoliday", "Configuration", FormMethod.Post, new { @class = "form-horizontal" }))
-    {
-        <div class="form-group">
-            <label class="col-sm-1 control-label">Description</label>
-            <div class="col-sm-2">
-                @Html.TextBox("Description", string.Empty, new { @class = "form-control" })
-            </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label">Date</label>
+        <div class="col-sm-1">
+            @Html.TextBox("HolidayDate", string.Empty, new { @class = "form-control", @placeholder = "MM/DD/YYYY" })
         </div>
-        <div class="form-group">
-            <label class="col-sm-1 control-label">Date</label>
-            <div class="col-sm-1">
-                @Html.TextBox("HolidayDate", string.Empty, new { @class = "form-control", @placeholder = "MM/DD/YYYY" })
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-1 col-sm-11">
+            <button type="submit" class="btn btn-primary">Add Holiday</button>
         </div>
-        <div class="form-group">
-            <div class="col-sm-offset-1 col-sm-11">
-                <button type="submit" class="btn btn-primary">Add Holiday</button>
-            </div>
-        </div>
-    }
+    </div>
+}
 
-    <hr />
+<hr />
 
-    <h3>Google Calendar Feed</h3>
+<h3>Google Calendar Feed</h3>
 
+<div style="border-top: solid 1px #aaa; border-bottom: solid 1px #aaa; padding: 10px; margin: 20px 0 20px 0;">
+    You can define events on a Google calendar and add them to Online Services here.
+</div>
 
-    <div class="form-horizontal">
-        <div class="form-group">
-            <label class="col-sm-1 control-label">Calendar ID</label>
-            <div class="col-sm-4">
-                <div class="input-group">
-                    @Html.DropDownList("GoogleCalendarID", Model.CalendarFeeds.Select(x => new SelectListItem() { Text = x.GoogleCalendarID, Value = x.GoogleCalendarFeedID.ToString(), Selected = Model.IsSelected(x) }), new { @class = "form-control calendar-feeds" })
-                    <span class="input-group-addon">
-                        <a href="#" data-toggle="modal" data-target="#add-calendar-feed-dialog"><img src="//ssel-apps.eecs.umich.edu/static/images/add.png" alt="add" title="Add Feed" /></a>
-                        @if (Model.CalendarFeeds.Count() > 1)
-                        {
-                            <a href="#" data-toggle="modal" data-target="#delete-calendar-feed-dialog" style="margin-left: 5px;"><img src="//ssel-apps.eecs.umich.edu/static/images/delete.png" alt="delete" title="Delete Feed" /></a>
-                        }
-                    </span>
-                </div>
+<div class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-1 control-label">Calendar ID</label>
+        <div class="col-sm-4">
+            <div class="input-group">
+                @Html.DropDownList("GoogleCalendarID", Model.CalendarFeeds.Select(x => new SelectListItem() { Text = x.GoogleCalendarID, Value = x.GoogleCalendarFeedID.ToString(), Selected = Model.IsSelected(x) }), new { @class = "form-control calendar-feeds" })
+                <span class="input-group-addon">
+                    <a href="#" data-toggle="modal" data-target="#add-calendar-feed-dialog"><img src="//ssel-apps.eecs.umich.edu/static/images/add.png" alt="add" title="Add Feed" /></a>
+                    @if (Model.CalendarFeeds.Count() > 1)
+                    {
+                        <a href="#" data-toggle="modal" data-target="#delete-calendar-feed-dialog" style="margin-left: 5px;"><img src="//ssel-apps.eecs.umich.edu/static/images/delete.png" alt="delete" title="Delete Feed" /></a>
+                    }
+                </span>
             </div>
         </div>
     </div>
+</div>
 
-    @try
-    {
-        var cal = Model.GetCalendar();
-        <div class="row">
-            <div class="col-sm-5">
-                <table class="table table-striped">
-                    <thead>
+@try
+{
+    var cal = Model.GetCalendar();
+    <div class="row">
+        <div class="col-sm-5">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="vertical-align: middle;">Description</th>
+                        <th style="vertical-align: middle;">Date</th>
+                        <th style="vertical-align: middle; text-align: center; width: 70px;"><a href="@Url.Action("AddCalendarFeedAllEvents", new { googleCalendarId = cal.Feed.GoogleCalendarID })" cla class="btn btn-default btn-sm" style="width: 60px;">ADD ALL</a></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in cal.GetEvents(Model.StartDate, DateTime.Now.AddYears(2)).OrderBy(x => x.Start))
+                    {
                         <tr>
-                            <th style="vertical-align: middle;">Description</th>
-                            <th style="vertical-align: middle;">Date</th>
-                            <th style="vertical-align: middle; text-align: center; width: 70px;"><a href="@Url.Action("AddCalendarFeedAllEvents", new { googleCalendarId = cal.Feed.GoogleCalendarID })" cla class="btn btn-default btn-sm" style="width: 60px;">ADD ALL</a></th>
+                            <td style="vertical-align: middle;">@e.Summary</td>
+                            <td style="vertical-align: middle;">@e.Start.ToString("M/d/yyyy")</td>
+                            <td style="vertical-align: middle; text-align: center;">
+                                @if (Model.HolidayExists(e.Summary, e.Start))
+                                {
+                                    <em class="text-muted">added</em>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("AddCalendarFeedEvent", new { googleCalendarId = cal.Feed.GoogleCalendarID, uid = e.Uid, index = e.OccurrenceIndex })" cla class="btn btn-default btn-sm" style="width: 60px;">ADD</a>
+                                }
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var e in cal.GetEvents(Model.StartDate, DateTime.Now.AddYears(2)).OrderBy(x => x.Start))
-                        {
-                            <tr>
-                                <td style="vertical-align: middle;">@e.Summary</td>
-                                <td style="vertical-align: middle;">@e.Start.ToString("M/d/yyyy")</td>
-                                <td style="vertical-align: middle; text-align: center;">
-                                    @if (Model.HolidayExists(e.Summary, e.Start))
-                                    {
-                                        <em class="text-muted">added</em>
-                                    }
-                                    else
-                                    {
-                                        <a href="@Url.Action("AddCalendarFeedEvent", new { googleCalendarId = cal.Feed.GoogleCalendarID, uid = e.Uid, index = e.OccurrenceIndex })" cla class="btn btn-default btn-sm" style="width: 60px;">ADD</a>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+catch (Exception ex)
+{
+    <div class="alert alert-danger" role="alert">
+        @ex.Message
+    </div>
+}
+
+<div id="add-calendar-feed-dialog" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Add Calendar Feed</h4>
             </div>
-        </div>
-    }
-    catch (Exception ex)
-    {
-        <div class="alert alert-danger" role="alert">
-            @ex.Message
-        </div>
-    }
-
-    <div id="add-calendar-feed-dialog" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Add Calendar Feed</h4>
-                </div>
-                @using (Html.BeginForm("AddCalendarFeed", "Configuration", FormMethod.Post))
+            @using (Html.BeginForm("AddCalendarFeed", "Configuration", FormMethod.Post))
             {
-                    <div class="modal-body">
-                        <label>Google Calendar ID</label>
-                        @Html.TextBox("GoogleCalendarID", string.Empty, new { @class = "form-control" })
-                        <div class="help-block" style="margin-bottom: 0;">The Calendar ID is displayed in the <strong><a href="https://calendar.google.com" target="_blank">Google Calendar</a></strong> settings.</div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" name="Command" value="add-feed" class="btn btn-primary">Add</button>
-                    </div>
-                }
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-
-    <div id="delete-calendar-feed-dialog" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Delete Calendar Feed</h4>
-                </div>
                 <div class="modal-body">
-                    <p style="color: #aa0000">
-                        Are you sure you want to delete this feed?
-                        <ul style="margin-bottom: 0;">
-                            <li style="color: #aa0000"><strong class="delete-calendar-id">[CalendarID]</strong></li>
-                        </ul>
-                    </p>
+                    <label>Google Calendar ID</label>
+                    @Html.TextBox("GoogleCalendarID", string.Empty, new { @class = "form-control" })
+                    <div class="help-block" style="margin-bottom: 0;">The Calendar ID is displayed in the <strong><a href="https://calendar.google.com" target="_blank">Google Calendar</a></strong> settings.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <a href="#" class="btn btn-primary delete-button">Delete</a>
+                    <button type="submit" name="Command" value="add-feed" class="btn btn-primary">Add</button>
                 </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+            }
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
-    @section scripts{
-        <script>
+<div id="delete-calendar-feed-dialog" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Delete Calendar Feed</h4>
+            </div>
+            <div class="modal-body">
+                <p style="color: #aa0000">
+                    Are you sure you want to delete this feed?
+                    <ul style="margin-bottom: 0;">
+                        <li style="color: #aa0000"><strong class="delete-calendar-id">[CalendarID]</strong></li>
+                    </ul>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary delete-button">Delete</a>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+@section scripts{
+    <script>
             var baseUrl = '@Url.Content("~")' + "/configuration/holidays/";
 
             function getSelectedFeed() {
@@ -202,5 +205,5 @@
                 var selectedFeed = getSelectedFeed();
                 window.location = baseUrl + encodeURIComponent(selectedFeed);
             });
-        </script>
-    }
+    </script>
+}

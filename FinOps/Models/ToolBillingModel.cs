@@ -1,10 +1,8 @@
 ﻿using LNF.Billing;
+using LNF.Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LNF.Repository;
-using LNF.Repository.Scheduler;
-using LNF.CommonTools;
 
 namespace FinOps.Models
 {
@@ -31,7 +29,7 @@ namespace FinOps.Models
         public IEnumerable<ReservationDurationItem> GetTransferReservations(ReservationDurationItem item)
         {
             ReservationDateRange range = new ReservationDateRange(item.Reservation.ResourceID, item.Reservation.ChargeBeginDateTime, item.Reservation.ChargeEndDateTime);
-            ReservationDurations durations = range.CreateReservationDurations();
+            ReservationDurations durations = new ReservationDurations(range);
             return durations.Where(x => x.Reservation.ReservationID != item.Reservation.ReservationID && x.UtilizedDuration.TotalSeconds > 0);
         }
 
@@ -128,7 +126,7 @@ namespace FinOps.Models
 
             if (!item.Reservation.IsCancelledBeforeCutoff)
             {
-                var standardHours = GetRoundedHours(item.StandardDuration, 2);
+                var standardHours = GetRoundedHours(item.StandardDuration, 4);
                 result = standardHours * item.Reservation.Cost.HourlyRate();
             }
 
@@ -148,7 +146,7 @@ namespace FinOps.Models
 
             if (item.Reservation.IsCancelledBeforeCutoff)
             {
-                var standardHours = GetRoundedHours(item.StandardDuration, 2);
+                var standardHours = GetRoundedHours(item.StandardDuration, 4);
                 result = standardHours * item.Reservation.Cost.BookingFeeRate();
             }
 
@@ -165,9 +163,14 @@ namespace FinOps.Models
             return GetRoundedMoney(result);
         }
 
-        public decimal GetTotalCharge(ReservationDurationItem item)
+        public decimal GetSubtotal(ReservationDurationItem item)
         {
             return GetStandardCharge(item) + GetBookingFeeCharge(item) + GetOverTimeCharge(item) + GetPerUseCharge(item);
+        }
+
+        public decimal GetTotalCharge(ReservationDurationItem item)
+        {
+            return GetSubtotal(item) * Convert.ToDecimal(item.Reservation.ChargeMultiplier);     
         }
 
         private decimal GetRoundedHours(TimeSpan ts, int decimals)

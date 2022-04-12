@@ -1,17 +1,17 @@
 ﻿using FinOps.Models;
 using LNF;
-using LNF.Cache;
 using System.Web.Mvc;
-using LNF.Web;
 
 namespace FinOps.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : FinOpsController
     {
+        public HomeController(IProvider provider) : base(provider) { }
+
         [Route("")]
         public ActionResult Index(HomeModel model)
         {
-            model.CurrentUser = HttpContext.CurrentUser();
+            model.CurrentUser = CurrentUser;
             return View(model);
         }
 

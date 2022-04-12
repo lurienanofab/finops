@@ -1,5 +1,5 @@
 ﻿@using FinOps.Models;
-@using LNF.Repository.Data;
+@using LNF.Data;
 
 @model ToolBillingModel
 @{
@@ -99,7 +99,7 @@
                     <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The total chargeable time minus the transferred duration (includes overtime).">Utilized</span></th>
                     <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The time billed at the standard rate (excludes overtime).">Standard</span></th>
                     <th class="text-right" style="width: 80px;"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The percentage of the total charge that was forgiven.">Forgiven %</span></th>
-                    <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The total charge for this reservation. Click the ReservationID to see detail.">Total Charge</span></th>
+                    <th class="text-right"><span data-toggle="tooltip" data-placement="top" data-container="body" title="The total charge for this reservation before forgiveness. Click the ReservationID to see detail.">Total Charge</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -111,7 +111,7 @@
                         <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Resource = item.Reservation.ResourceID})">@item.Reservation.ResourceName</a></td>
                         <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), ProcessTech = item.Reservation.ProcessTechID })">@item.Reservation.ProcessTechName</a></td>
                         <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Client = item.Reservation.ClientID })">@item.Reservation.DisplayName</a></td>
-                        <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Account = item.Reservation.AccountID })">@LNF.Models.Data.AccountItem.GetNameWithShortCode(item.Reservation.ShortCode, item.Reservation.AccountName)</a></td>
+                        <td><a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Account = item.Reservation.AccountID })">@Accounts.GetNameWithShortCode(item.Reservation.ShortCode, item.Reservation.AccountName)</a></td>
                         <td class="text-center">@(item.Reservation.IsStarted ? "Yes" : "No")</td>
                         <td class="text-center">@(item.Reservation.IsActive ? "No" : "Yes")</td>
                         <td class="text-center">@(item.Reservation.IsCancelledBeforeCutoff ? "Yes" : "No")</td>
@@ -158,7 +158,7 @@
                         <li class="list-group-item">
                             <strong>Account</strong>
                             <div style="margin-left: 10px;">
-                                <a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Account = item.Reservation.AccountID })">@LNF.Models.Data.AccountItem.GetNameWithShortCode(item.Reservation.ShortCode, item.Reservation.AccountName)</a>
+                                <a href="@Url.Action("ToolBilling", "Report", new { StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd"), EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd"), Account = item.Reservation.AccountID })">@Accounts.GetNameWithShortCode(item.Reservation.ShortCode, item.Reservation.AccountName)</a>
                             </div>
                         </li>
                         <li class="list-group-item">
@@ -340,21 +340,21 @@
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
-                                        <td class="text-right">@string.Format("{0:C}", Model.GetTotalCharge(item))</td>
+                                        <td class="text-right">@string.Format("{0:C}", Model.GetSubtotal(item))</td>
                                     </tr>
                                     <tr>
                                         <th>Forgiven @@ @string.Format("{0:0.0%}", (1 - item.Reservation.ChargeMultiplier))</th>
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
-                                        <td class="text-right">@string.Format("{0:C}", -1 * (Model.GetTotalCharge(item) * Convert.ToDecimal(1 - item.Reservation.ChargeMultiplier)))</td>
+                                        <td class="text-right">@string.Format("{0:C}", -1 * (Model.GetSubtotal(item) * Convert.ToDecimal(1 - item.Reservation.ChargeMultiplier)))</td>
                                     </tr>
                                     <tr style="font-size: 12pt;">
                                         <th>Total</th>
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
                                         <td class="text-right">&nbsp;</td>
-                                        <td class="text-right"><strong>@string.Format("{0:C}", Model.GetTotalCharge(item) * Convert.ToDecimal(item.Reservation.ChargeMultiplier))</strong></td>
+                                        <td class="text-right"><strong>@string.Format("{0:C}", Model.GetTotalCharge(item))</strong></td>
                                     </tr>
                                 </tbody>
                             </table>

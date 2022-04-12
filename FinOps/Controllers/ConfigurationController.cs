@@ -1,13 +1,11 @@
 ﻿using FinOps.Models;
 using LNF;
+using LNF.Billing;
 using LNF.CommonTools;
 using LNF.Data;
-using LNF.Models.Billing;
-using LNF.Models.Data;
+using LNF.Impl.Repository.Data;
 using LNF.Repository;
-using LNF.Repository.Data;
 using LNF.Web;
-using OnlineServices.Api.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +13,10 @@ using System.Web.Mvc;
 
 namespace FinOps.Controllers
 {
-    public class ConfigurationController : Controller
+    public class ConfigurationController : FinOpsController
     {
+        public ConfigurationController(IProvider provider) : base(provider) { }
+
         [Route("configuration/remote-processing")]
         public ActionResult RemoteProcessing(RemoteProcessingModel model)
         {
@@ -134,25 +134,26 @@ namespace FinOps.Controllers
         [Route("configuration/holidays/{SelectedGoogleCalendarID?}")]
         public ActionResult Holidays(HolidaysModel model)
         {
-            model.CurrentUser = HttpContext.CurrentUser();
+            model.Provider = Provider;
+            model.CurrentUser = CurrentUser;
             model.CurrentUserClientAccounts = HttpContext.GetCurrentUserClientAccounts();
             model.StartDate = GetHolidayStartDate();
             model.EndDate = GetHolidayEndDate();
-            model.Holidays = DA.Current.Query<Holiday>().Where(x => x.HolidayDate >= model.StartDate).OrderBy(x => x.HolidayDate).ToList();
-            model.CalendarFeeds = DA.Current.Query<GoogleCalendarFeed>().Where(x => x.Active).OrderByDescending(x => x.LastUsed).ToList();
+            model.Holidays = DataSession.Query<Holiday>().Where(x => x.HolidayDate >= model.StartDate).OrderBy(x => x.HolidayDate).ToList();
+            model.CalendarFeeds = DataSession.Query<GoogleCalendarFeed>().Where(x => x.Active).OrderByDescending(x => x.LastUsed).ToList();
 
             if (model.CalendarFeeds.Count() == 0)
             {
                 var defaultFeed = new GoogleCalendarFeed()
                 {
                     GoogleCalendarID = "en.usa#holiday@group.v.calendar.google.com",
-                    Client = DA.Current.Single<Client>(HttpContext.CurrentUser().ClientID),
+                    Client = DataSession.Single<Client>(CurrentUser.ClientID),
                     Created = DateTime.Now,
                     LastUsed = DateTime.Now,
                     Active = true
                 };
 
-                DA.Current.SaveOrUpdate(defaultFeed);
+                DataSession.SaveOrUpdate(defaultFeed);
 
                 model.CalendarFeeds = new List<GoogleCalendarFeed>() { defaultFeed };
             }
@@ -168,7 +169,7 @@ namespace FinOps.Controllers
         {
             if (!string.IsNullOrEmpty(model.Description) && model.HolidayDate != default(DateTime))
             {
-                DA.Current.SaveOrUpdate(model);
+                DataSession.SaveOrUpdate(model);
             }
 
             return RedirectToAction("Holidays");
@@ -177,10 +178,10 @@ namespace FinOps.Controllers
         [Route("configuration/holidays/delete/{holidayId}")]
         public ActionResult DeleteHoliday(int holidayId)
         {
-            var holiday = DA.Current.Single<Holiday>(holidayId);
+            var holiday = DataSession.Single<Holiday>(holidayId);
 
             if (holiday != null)
-                DA.Current.Delete(holiday);
+                DataSession.Delete(holiday);
 
             return RedirectToAction("Holidays");
         }
@@ -190,11 +191,11 @@ namespace FinOps.Controllers
         {
             if (!string.IsNullOrEmpty(model.GoogleCalendarID))
             {
-                model.Client = DA.Current.Single<Client>(HttpContext.CurrentUser().ClientID);
+                model.Client = DataSession.Single<Client>(CurrentUser.ClientID);
                 model.Created = DateTime.Now;
                 model.LastUsed = DateTime.Now;
                 model.Active = true;
-                DA.Current.SaveOrUpdate(model);
+                DataSession.SaveOrUpdate(model);
             }
 
             return RedirectToAction("Holidays");
@@ -203,19 +204,21 @@ namespace FinOps.Controllers
         [Route("configuration/holidays/feed/{googleCalendarId}/delete")]
         public ActionResult DeleteCalendarFeed(string googleCalendarId)
         {
-            var feed = DA.Current.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
-            DA.Current.Delete(feed);
+            var feed = DataSession.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
+            DataSession.Delete(feed);
             return RedirectToAction("Holidays");
         }
 
         [Route("configuration/holidays/feed/{googleCalendarId}/add/all")]
         public ActionResult AddCalendarFeedAllEvents(string googleCalendarId)
         {
-            var feed = DA.Current.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
+            var feed = DataSession.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
             var cal = GoogleCalendar.Create(feed);
 
+            IEnumerable<IHoliday> holidays = DataSession.Query<Holiday>().ToList();
+
             foreach (var e in cal.GetEvents(GetHolidayStartDate(), GetHolidayEndDate()))
-                cal.AddHoliday(e);
+                AddHoliday(e, holidays);
 
             return RedirectToAction("Holidays");
         }
@@ -223,14 +226,35 @@ namespace FinOps.Controllers
         [Route("configuration/holidays/feed/{googleCalendarId}/add/{uid}/{index}")]
         public ActionResult AddCalendarFeedEvent(string googleCalendarId, string uid, int index)
         {
-            var feed = DA.Current.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
+            var feed = DataSession.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == googleCalendarId);
             var cal = GoogleCalendar.Create(feed);
 
             var e = cal.GetEvents(GetHolidayStartDate(), GetHolidayEndDate()).First(x => x.Uid == uid && x.OccurrenceIndex == index);
 
-            cal.AddHoliday(e);
+            IEnumerable<IHoliday> holidays = DataSession.Query<Holiday>().ToList();
+
+            AddHoliday(e, holidays);
 
             return RedirectToAction("Holidays");
+        }
+
+        private void AddHoliday(GoogleCalendar.CalendarEvent e, IEnumerable<IHoliday> holidays)
+        {
+            var start = e.Start;
+            var summary = e.Summary;
+
+            // check for existing
+
+            var existing = holidays.FirstOrDefault(x => x.Description == summary && x.HolidayDate == start);
+
+            if (existing == null)
+            {
+                DataSession.SaveOrUpdate(new Holiday()
+                {
+                    Description = summary,
+                    HolidayDate = start
+                });
+            }
         }
     }
 }

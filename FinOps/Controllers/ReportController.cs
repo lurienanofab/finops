@@ -1,13 +1,12 @@
 ﻿using FinOps.Models;
 using LNF;
 using LNF.Billing;
+using LNF.Billing.Reports;
 using LNF.CommonTools;
-using LNF.Models.Billing.Reports;
-using LNF.Models.Data;
-using LNF.Models.Scheduler;
-using LNF.Repository;
-using LNF.Repository.Billing;
-using LNF.Repository.Data;
+using LNF.Data;
+using LNF.Impl.Repository.Billing;
+using LNF.Impl.Repository.Data;
+using LNF.Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +14,10 @@ using System.Web.Mvc;
 
 namespace FinOps.Controllers
 {
-    public class ReportController : Controller
+    public class ReportController : FinOpsController
     {
+        public ReportController(IProvider provider) : base(provider) { }
+
         [Route("report/misc-charges")]
         public ActionResult MiscCharges(MiscChargesModel model)
         {
@@ -29,15 +30,15 @@ namespace FinOps.Controllers
             model.Quantity = 1;
 
             model.Clients = FilterByPeriod(model.Period);
-            model.MiscBillingCharges = DA.Current.Query<MiscBillingCharge>().Where(x => x.Period == model.Period).ToList();
+            model.MiscBillingCharges = DataSession.Query<MiscBillingCharge>().Where(x => x.Period == model.Period).ToList();
 
             return View(model);
         }
 
         private IEnumerable<IClient> FilterByPeriod(DateTime period)
         {
-            IQueryable<ActiveLogClient> alogs = DA.Current.Query<ActiveLogClient>().Where(x => x.EnableDate < period && (x.DisableDate == null || x.DisableDate.Value > period));
-            return DA.Current.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).CreateModels<IClient>();
+            IQueryable<ActiveLogClient> alogs = DataSession.Query<ActiveLogClient>().Where(x => x.EnableDate < period && (x.DisableDate == null || x.DisableDate.Value > period));
+            return DataSession.Query<ClientInfo>().Join(alogs, o => o.ClientID, i => i.ClientID, (outer, inner) => outer).ToList();
         }
 
         [Route("report/misc-charges/run")]
@@ -63,7 +64,7 @@ namespace FinOps.Controllers
 
             if (model.ReservationID > 0)
             {
-                rsv = ServiceProvider.Current.Scheduler.Reservation.GetReservation(model.ReservationID.Value);
+                rsv = Provider.Scheduler.Reservation.GetReservation(model.ReservationID.Value);
                 resourceId = rsv.ResourceID;
             }
 
@@ -87,7 +88,7 @@ namespace FinOps.Controllers
                 }
 
                 range = new ReservationDateRange(resourceId, model.StartDate.Value, model.EndDate.Value);
-                ReservationDurations rd = range.CreateReservationDurations();
+                ReservationDurations rd = new ReservationDurations(range);
                 model.LoadReservationDurations(rd);
             }
 
@@ -175,7 +176,7 @@ namespace FinOps.Controllers
         }
 
         [Route("report/external-invoice/download/zip")]
-        public ActionResult ExternalInvoiceDownloadZip(ExternalInvoiceModel model)
+        public ActionResult ExternalInvoiceDownloadZip()
         {
             //var context = await LoadAsync(model);
 
@@ -183,14 +184,6 @@ namespace FinOps.Controllers
             //model.IncludeRemoteProcessing = context.GetSessionItem("IncludeRemoteProcessing", false);
 
             return RedirectToAction("ExternalInvoice");
-        }
-
-        private void ExternalInvoiceLoadAsync(ExternalInvoiceModel model)
-        {
-            //using (var bc = ApiProvider.NewBillingClient())
-            //{
-            //    model.Invoices = await bc.GetInvoices(model.Period);
-            //}
         }
 
         [HttpGet, Route("report/subsidy")]

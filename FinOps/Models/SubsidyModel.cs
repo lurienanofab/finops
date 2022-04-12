@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Web;
 
 namespace FinOps.Models
 {
@@ -14,19 +12,19 @@ namespace FinOps.Models
 
         public IEnumerable<SubsidyItem> GetItems()
         {
-            var dtSubsidy = DA.Command(CommandType.Text)
+            var dtSubsidy = DataCommand.Create(CommandType.Text)
                 .Param("Period", Period)
                 .FillDataTable("SELECT tsb.*, c.LName, c.FName FROM sselData.dbo.TieredSubsidyBilling tsb INNER JOIN sselData.dbo.Client c ON c.ClientID = tsb.ClientID WHERE tsb.[Period] = @Period");
 
-            var dtToolBilling = DA.Command(CommandType.Text)
+            var dtToolBilling = DataCommand.Create(CommandType.Text)
                 .Param("Period", Period)
                 .FillDataTable("SELECT * FROM sselData.dbo.ToolBilling WHERE [Period] = @Period");
 
-            var dtRoomBilling = DA.Command(CommandType.Text)
+            var dtRoomBilling = DataCommand.Create(CommandType.Text)
                 .Param("Period", Period)
                 .FillDataTable("SELECT * FROM sselData.dbo.RoomApportionmentInDaysMonthly WHERE [Period] = @Period");
 
-            var dtMiscBilling = DA.Command(CommandType.Text)
+            var dtMiscBilling = DataCommand.Create(CommandType.Text)
                 .Param("Period", Period)
                 .FillDataTable("SELECT * FROM sselData.dbo.MiscBillingCharge WHERE [Period] = @Period");
 

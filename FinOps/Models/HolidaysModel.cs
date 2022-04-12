@@ -1,5 +1,6 @@
-﻿using LNF.Repository;
-using LNF.Repository.Data;
+﻿using LNF;
+using LNF.Impl.Repository.Data;
+using LNF.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ namespace FinOps.Models
 {
     public class HolidaysModel : ModelBase
     {
+        public IProvider Provider { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public IEnumerable<Holiday> Holidays { get; set; }
@@ -16,7 +18,7 @@ namespace FinOps.Models
 
         public GoogleCalendar GetCalendar()
         {
-            var selectedFeed = DA.Current.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == SelectedGoogleCalendarID); // yes, thow exceptions when null
+            var selectedFeed = Provider.DataAccess.Session.Query<GoogleCalendarFeed>().First(x => x.GoogleCalendarID == SelectedGoogleCalendarID); // yes, thow exceptions when null
             var result = GoogleCalendar.Create(selectedFeed);
             selectedFeed.LastUsed = DateTime.Now;
             return result;

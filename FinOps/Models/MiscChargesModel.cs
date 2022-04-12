@@ -1,5 +1,5 @@
-﻿using LNF.Models.Data;
-using LNF.Repository.Billing;
+﻿using LNF.Data;
+using LNF.Impl.Repository.Billing;
 using System;
 using System.Collections.Generic;
 
